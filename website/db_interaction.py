@@ -53,6 +53,7 @@ class user_db_interaction:
             return True
         else:
             return False
+
     def retrieve_user_id(self):
         connection = sqlite3.connect('users.db')
         cursor = connection.cursor()

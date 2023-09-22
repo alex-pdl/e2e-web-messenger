@@ -1,19 +1,28 @@
-from flask import Flask, url_for, render_template, redirect, request, flash
+from flask import Flask, url_for, render_template, redirect, request, flash, session
 from db_interaction import user_db_interaction
 
 app = Flask(__name__)
 
 @app.route('/')
 def homepage():
-    return redirect(url_for('login'))
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    else:
+        return redirect(url_for('chats'))
 
 @app.route('/login', methods = ['GET','POST'])
 def login():
     if request.method == "POST":
         username = request.form.get('username')
         password = request.form.get('password')
+        
         user = user_db_interaction(username,password)
+        #if user entered in correct info:
         if user_db_interaction.password_check(user) == True:
+            session['username'] = username
+            #session['usr_id'] = user.retrieve_user_id()
+            print(user.retrieve_user_id())
+
             return redirect(url_for('chats'))
         else:
             return render_template("login.html")
@@ -32,7 +41,9 @@ def registration():
     return render_template("registration.html")
 
 @app.route('/chats', methods = ['GET','POST'])
-def messages():
+def chats():
+    print(session['username'])
+    #print(session['usr_id'])
     return render_template("chats.html")
 
 
