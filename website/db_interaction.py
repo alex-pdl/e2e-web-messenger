@@ -53,10 +53,14 @@ class user_db_interaction:
             return True
         else:
             return False
+        connection.commit()
+        connection.close()
 
     def retrieve_user_id(self):
         connection = sqlite3.connect('users.db')
         cursor = connection.cursor()
         cursor.execute("SELECT id FROM users WHERE username = (?)", (self.username,))
         retrieved_id = str(cursor.fetchall()).strip("[(', )]")
+        connection.commit()
+        connection.close()
         return retrieved_id
