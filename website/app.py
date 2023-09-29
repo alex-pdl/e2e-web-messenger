@@ -24,7 +24,8 @@ def login():
                 session['usr_id'] = user_db_interaction.retrieve_user_id(user)
                 return redirect(url_for('chats'))
             else:
-                return render_template("login.html")
+                error = "You have not entered in the correct information. Please try again."
+                return render_template("login.html",error=error)
         else:
             return render_template("login.html")
     else:
