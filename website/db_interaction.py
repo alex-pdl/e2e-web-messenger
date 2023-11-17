@@ -15,9 +15,15 @@ class user_db_interaction:
     def register(self):
         #if username is not in use
         if self.username_check() == False:
-            #connecting to the database
             connection = sqlite3.connect('users.db')
             cursor = connection.cursor()
+            sql = """
+                CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY NOT NULL,
+                username TEXT,
+                password TEXT
+                )
+                """
             #inserting username & password hash into the database
             info = [
                     (self.username, self.hash())
@@ -30,9 +36,7 @@ class user_db_interaction:
             return False
 
     def password_check(self):
-        #connecting to the database
         connection = sqlite3.connect('users.db')  
-        #establishing a cursor
         cursor = connection.cursor()
         cursor.execute("SELECT password FROM users WHERE username = (?)", (self.username,))
         #when the pass hash is fetched, it is in the form of a list and has many characters that aren't part of the hash
@@ -44,6 +48,7 @@ class user_db_interaction:
         connection.commit()
         connection.close()
         
+    #checks if the username is not in use
     def username_check(self):
         connection = sqlite3.connect('users.db')
         cursor = connection.cursor()
@@ -64,3 +69,19 @@ class user_db_interaction:
         connection.commit()
         connection.close()
         return retrieved_id
+    
+    def chat_creation(self):
+        connection = sqlite3.connect('users.db')
+        cursor = connection.cursor()
+        create_table = """
+            CREATE TABLE IF NOT EXISTS chats (
+            chatid INTEGER PRIMARY KEY NOT NULL,
+            user1_id INTEGER,
+            user2_id INTEGER
+            ) """
+        cursor.execute(create_table)
+        values = [
+            self.retrieve_user_id(),"2345"
+        ]
+        cursor.execute("INSERT INTO chats (user1_id,user2_id) VALUES(?,?)", (values))
+        connection.commit()
