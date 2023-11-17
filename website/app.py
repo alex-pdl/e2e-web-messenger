@@ -44,8 +44,15 @@ def registration():
 
 @app.route('/chats', methods = ['GET','POST'])
 def chats():
-    return render_template("chats.html", welcome = str(session['username']))
-
+    #try and except is used as, if a user tries to reach the chats without logging in first, flask will produce an error
+    try:
+        if request.form.get('logout') == 'clicked':
+            session.clear()
+            return redirect(url_for('login'))
+        
+        return render_template("chats.html", user_name = str(session['username']))
+    except:
+        return redirect(url_for('login'))
 
 if __name__ == "__main__":
     app.config['SECRET_KEY'] = 'a98er23iur98erw980293dsfa'
