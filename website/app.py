@@ -17,6 +17,7 @@ def login():
             username = request.form.get('username')
             password = request.form.get('password')
             
+            global user
             user = user_db_interaction(username,password)
             #if user entered in correct info:
             if user_db_interaction.password_check(user) == True:
@@ -49,6 +50,9 @@ def chats():
         if request.form.get('logout') == 'clicked':
             session.clear()
             return redirect(url_for('login'))
+        if request.method == "POST":
+            user2 = request.form.get('user_chat_name')
+            user_db_interaction.chat_creation(user,user2)
         
         return render_template("chats.html", user_name = str(session['username']))
     except:

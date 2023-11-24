@@ -5,6 +5,7 @@ class user_db_interaction:
     def __init__(self, username, password):
         self.username = username
         self.password = password
+        self.user = ""
 
     #function hashes the password attribute of the class user and returns the hash password
     def hash(self):
@@ -70,18 +71,19 @@ class user_db_interaction:
         connection.close()
         return retrieved_id
     
-    def chat_creation(self):
+    def chat_creation(self, user_2):
         connection = sqlite3.connect('users.db')
         cursor = connection.cursor()
-        create_table = """
+
+        create_chats_table = """
             CREATE TABLE IF NOT EXISTS chats (
             chatid INTEGER PRIMARY KEY NOT NULL,
-            user1_id INTEGER,
-            user2_id INTEGER
+            username_1 INTEGER,
+            username_2 INTEGER
             ) """
-        cursor.execute(create_table)
+        cursor.execute(create_chats_table)
         values = [
-            self.retrieve_user_id(),"2345"
+            self.username,user_2
         ]
-        cursor.execute("INSERT INTO chats (user1_id,user2_id) VALUES(?,?)", (values))
+        cursor.execute("INSERT INTO chats (username_1,username_2) VALUES(?,?)", (values))
         connection.commit()
