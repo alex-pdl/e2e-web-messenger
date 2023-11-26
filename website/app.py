@@ -53,8 +53,11 @@ def chats():
         if request.method == "POST":
             user2 = request.form.get('user_chat_name')
             user_db_interaction.chat_creation(user,user2)
-        
-        return render_template("chats.html", user_name = str(session['username']))
+
+        #chats doesn't work when you are automatically logged in by cookies, this is because user is only established if you go through the login page
+        #this is why chats crashes when you try and retrieve names without loggin in first
+        names = user_db_interaction.chats_retrieval(user)
+        return render_template("chats.html", user_name = str(session['username']),names = names)
     except:
         return redirect(url_for('login'))
 

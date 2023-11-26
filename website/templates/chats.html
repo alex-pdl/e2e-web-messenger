@@ -15,6 +15,11 @@
             <button type="submit" name="logout" value="clicked">Logout</button>
         </form>
     <hr>
+    <ul>
+        {% for name in names %}
+            <li><button>{{ name }}</button></li>
+        {% endfor %}
+    </ul>
     <hr>
     <form method="post">
         <div>

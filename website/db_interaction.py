@@ -5,7 +5,6 @@ class user_db_interaction:
     def __init__(self, username, password):
         self.username = username
         self.password = password
-        self.user = ""
 
     #function hashes the password attribute of the class user and returns the hash password
     def hash(self):
@@ -120,3 +119,16 @@ class user_db_interaction:
                 print("This user doesn't seem to exist. Maybe you misspelt their username?")
         else:
             print("You can't start a chat with yourself.")
+
+    def chats_retrieval(self):
+        connection = sqlite3.connect('users.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT username_2 from chats WHERE username_1 = (?)", (self.username,))
+        get_names = cursor.fetchall()
+        chat_names = []
+        for i in get_names:
+            chat_names.append(str(i).strip("[(', )]"))
+        return chat_names
+
+    def messages_retrieval(self):
+        pass
