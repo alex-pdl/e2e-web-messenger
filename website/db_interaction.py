@@ -74,42 +74,49 @@ class user_db_interaction:
     def chat_creation(self, user_2):
         connection = sqlite3.connect('users.db')
         cursor = connection.cursor()
+        #checks if user tried to chat with themselves
+        if self.username != user_2:
+            #checks if user_2 exists
+            get_usernames = """SELECT username FROM users"""
+            cursor.execute(get_usernames)
+            raw_existing_users = cursor.fetchall()
+            existing_users = []
         
-        #checks if the user already has a chat with the username submitted.
-        #fetches chats of user1
-        list_of_names = []
-        cursor.execute("SELECT username_2 FROM chats WHERE username_1 = (?)", (self.username,))  
-        fetched_chats_of_user1 = cursor.fetchall()
-        for i in fetched_chats_of_user1:
-            list_of_names.append(str(i).strip("[(', )]"))
-        
-        #fetches chats of user2
-        try:
-            cursor.execute("SELECT username_1 FROM chats WHERE username_2 = (?)", ("123456",))
-            fetched_chats_of_user2 = cursor.fetchall()
-            
-            for i in fetched_chats_of_user2:
-                list_of_names.append(str(i).strip("[(', )]"))
-        except:
-            pass
-        
-        if self.username in list_of_names:
-            print("True")
-        else:
-            print("False")
+            for i in raw_existing_users:
+                existing_users.append(str(i).strip("[(', )]"))
 
-        if self.username not in list_of_names or user_2 not in list_of_names:
-            #creates and adds the user and the user they choose to chat with to the 'chats' database
-            create_chats_table = """
-                CREATE TABLE IF NOT EXISTS chats (
-                chatid INTEGER PRIMARY KEY NOT NULL,
-                username_1 INTEGER,
-                username_2 INTEGER
-                ) """
-            cursor.execute(create_chats_table)
-            values = [
-                self.username,user_2
-            ]
-            cursor.execute("INSERT INTO chats (username_1,username_2) VALUES(?,?)", (values))
-            connection.commit()
-        connection.close()
+            if user_2 in existing_users:
+                #checks if user already has a chat with the user_2
+                list_of_names = []
+                cursor.execute("SELECT username_2 FROM chats WHERE username_1 = (?)", (self.username,))  
+                fetched_chats_of_user1 = cursor.fetchall()
+                for i in fetched_chats_of_user1:
+                    list_of_names.append(str(i).strip("[(', )]"))
+                try:
+                    cursor.execute("SELECT username_1 FROM chats WHERE username_2 = (?)", (user_2,))
+                    fetched_chats_of_user2 = cursor.fetchall()            
+                    for i in fetched_chats_of_user2:
+                        list_of_names.append(str(i).strip("[(', )]"))
+                except:
+                    pass
+                if self.username not in list_of_names and user_2 not in list_of_names:
+                    #adds the user and the user they choose to chat with to the 'chats' database
+                    create_chats_table = """
+                        CREATE TABLE IF NOT EXISTS chats (
+                        chatid INTEGER PRIMARY KEY NOT NULL,
+                        username_1 INTEGER,
+                        username_2 INTEGER
+                    ) """
+                    cursor.execute(create_chats_table)
+                    values = [
+                        self.username,user_2
+                    ]
+                    cursor.execute("INSERT INTO chats (username_1,username_2) VALUES(?,?)", (values))
+                    connection.commit()
+                    connection.close()
+                else:
+                    print("You already have a chat with this person, you can't create another one.")
+            else:
+                print("This user doesn't seem to exist. Maybe you misspelt their username?")
+        else:
+            print("You can't start a chat with yourself.")
