@@ -123,9 +123,16 @@ class user_db_interaction:
     def chats_retrieval(self):
         connection = sqlite3.connect('users.db')
         cursor = connection.cursor()
+        
         cursor.execute("SELECT username_2 from chats WHERE username_1 = (?)", (self.username,))
         get_names = cursor.fetchall()
+
+        cursor.execute("SELECT username_1 from chats WHERE username_2 = (?)", (self.username,))
+        get_names_2 = cursor.fetchall()
+
         chat_names = []
+        for i in get_names_2:
+            chat_names.append(str(i).strip("[(', )]"))
         for i in get_names:
             chat_names.append(str(i).strip("[(', )]"))
         return chat_names
