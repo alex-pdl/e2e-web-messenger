@@ -41,6 +41,9 @@ def registration():
         user = user_db_interaction(username,password)
         if user_db_interaction.register(user) != False:
             return redirect(url_for('login'))
+        else:
+            error = "Sorry, this username is currently in use."
+            return render_template("registration.html",error=error)
     return render_template("registration.html")
 
 @app.route('/chats', methods = ['GET','POST'])

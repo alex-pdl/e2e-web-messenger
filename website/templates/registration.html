@@ -23,5 +23,8 @@
             </div>
             <input type="submit" value="Register">
         </form>
+        {% if error%}
+        <p><strong>{{error}}</strong></p>
+        {% endif%}
 </body>
 </html>
