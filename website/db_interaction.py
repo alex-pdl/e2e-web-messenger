@@ -114,12 +114,11 @@ class user_db_interaction:
                     connection.commit()
                     connection.close()
                 else:
-                    print("You already have a chat with this person, you can't create another one.")
+                    return("Error_1")
             else:
-                print("This user doesn't seem to exist. Maybe you misspelt their username?")
+                return("Error_2")
         else:
-            print("You can't start a chat with yourself.")
-
+            return("Error_3")
     def chats_retrieval(self):
         connection = sqlite3.connect('users.db')
         cursor = connection.cursor()

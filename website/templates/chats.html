@@ -28,3 +28,7 @@
         </div>
         <input type="submit" value="Add user to chat">
     </form>
+    {% if error%}
+    <p><strong>{{error}}</strong></p>
+    {% endif%}
+</body>
