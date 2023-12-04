@@ -1,5 +1,6 @@
 from flask import Flask, url_for, render_template, redirect, request, flash, session
 from db_interaction import user_db_interaction
+from db_interaction import chat_creation, chats_retrieval
 
 app = Flask(__name__)
 
@@ -56,17 +57,17 @@ def chats():
             return redirect(url_for('login'))
         if request.method == "POST":
             user2 = request.form.get('user_chat_name')
-            user_db_interaction.chat_creation(user,user2)
-            if user_db_interaction.chat_creation(user,user2) == "Error_1":
+            chat_creation(session['username'],user2)
+            if chat_creation(session['username'],user2) == "Error_1":
                 error = "You already have a chat with this person, you can't create another one."
-            elif user_db_interaction.chat_creation(user,user2) == "Error_2":
+            elif chat_creation(session['username'],user2) == "Error_2":
                 error = "This user doesn't seem to exist. Maybe you misspelt their username?"
-            elif user_db_interaction.chat_creation(user,user2) == "Error_3":
+            elif chat_creation(session['username'],user2) == "Error_3":
                 error = "You can't start a chat with yourself."
 
         #chats doesn't work when you are automatically logged in by cookies, this is because user is only established if you go through the login page
         #this is why chats crashes when you try and retrieve names without loggin in first
-        names = user_db_interaction.chats_retrieval(user)
+        names = chats_retrieval(session['username'])
         return render_template("chats.html", user_name = str(session['username']),names = names,error=error)
     except:
         return redirect(url_for('login'))
