@@ -65,8 +65,6 @@ def chats():
             elif chat_creation(session['username'],user2) == "Error_3":
                 error = "You can't start a chat with yourself."
 
-        #chats doesn't work when you are automatically logged in by cookies, this is because user is only established if you go through the login page
-        #this is why chats crashes when you try and retrieve names without loggin in first
         names = chats_retrieval(session['username'])
         return render_template("chats.html", user_name = str(session['username']),names = names,error=error)
     except:
