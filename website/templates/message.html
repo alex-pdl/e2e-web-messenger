@@ -4,9 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Messaging</title>
+    <style>
+        /* Add some margin between the hr elements */
+        hr {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
-<div>
-    <h1>
-        You are chatting with {{ selected_user }}.
-    </h1>
+<body>
+    <div>
+        <h1>
+            You are chatting with {{ selected_user }}.
+        </h1>
+        <form method="post">
+            <button type="submit" name="return" value="clicked">Return</button>
+        </form>
+    <hr>
+    <hr>
+    <form method="post">
+        <div>
+            <label for="message">Message: </label>
+            <input type="message" id="message" name="message" maxlength="256" required style="width: 500px;height: 100px;">
+        </div>
+        <input type="submit" value="Send Message">
+    </form>
+</body>
 </html>

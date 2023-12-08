@@ -72,6 +72,9 @@ def chats():
 
 @app.route('/message',methods = ['GET', 'POST'])
 def message():
+    if request.form.get('return') == 'clicked':
+            return redirect(url_for('chats'))
+            
     selected_name = request.args.get('selected_name')
     return render_template('message.html',selected_user = selected_name)
 
