@@ -85,19 +85,9 @@ def chat_creation(user_1, user_2):
             existing_users.append(str(i).strip("[(', )]"))
 
         if user_2 in existing_users:
-            #checks if user already has a chat with the user_2
-            list_of_names = []
-            cursor.execute("SELECT username_2 FROM chats WHERE username_1 = (?)", (user_1,))  
-            fetched_chats_of_user1 = cursor.fetchall()
-            for i in fetched_chats_of_user1:
-                list_of_names.append(str(i).strip("[(', )]"))
-            try:
-                cursor.execute("SELECT username_1 FROM chats WHERE username_2 = (?)", (user_2,))
-                fetched_chats_of_user2 = cursor.fetchall()            
-                for i in fetched_chats_of_user2:
-                    list_of_names.append(str(i).strip("[(', )]"))
-            except:
-                pass
+            
+            list_of_names = chats_retrieval(user_1)
+            
             if user_1 not in list_of_names and user_2 not in list_of_names:
                 #adds the user and the user they choose to chat with to the 'chats' database
                 create_chats_table = """
