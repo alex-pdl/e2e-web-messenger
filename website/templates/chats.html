@@ -17,9 +17,9 @@
     <hr>
     <ul>
         {% for name in names %}
-            <li><button>{{ name }}</button></li>
-        {% endfor %}    
-    </ul>
+            <li><a href="/message?selected_name={{ name }}"><button>{{ name }}</button></a></li>
+        {% endfor %}
+    </ul>    
     <hr>
     <form method="post">
         <div>

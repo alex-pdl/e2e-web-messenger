@@ -70,6 +70,11 @@ def chats():
     except:
         return redirect(url_for('login'))
 
+@app.route('/message',methods = ['GET', 'POST'])
+def message():
+    selected_name = request.args.get('selected_name')
+    return render_template('message.html',selected_user = selected_name)
+
 if __name__ == "__main__":
     app.config['SECRET_KEY'] = 'a98er23iur98erw980293dsfa'
     app.run(debug=True)
