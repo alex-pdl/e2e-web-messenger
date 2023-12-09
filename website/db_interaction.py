@@ -1,5 +1,6 @@
 import sqlite3
 import hashlib
+import datetime
 
 class user_db_interaction:
     def __init__(self, username, password):
@@ -109,7 +110,6 @@ def chat_creation(user_1, user_2):
             return("Error_2")
     else:
         return("Error_3")
-        
 
 def chats_retrieval(username):
     connection = sqlite3.connect('users.db')
@@ -127,3 +127,35 @@ def chats_retrieval(username):
     for i in get_names:
         chat_names.append(str(i).strip("[(', )]"))
     return chat_names
+
+def retrieve_chatid(username_1,username_2):
+    connection = sqlite3.connect('users.db')
+    cursor = connection.cursor()
+    cursor.execute(f"SELECT chatid FROM chats WHERE (username_1 = '{username_1}' AND username_2 = '{username_2}') OR (username_1 = '{username_2}' AND username_2 = '{username_1}')")
+    chat_id = str(cursor.fetchone()).strip("[(', )]")
+    connection.close()
+    return chat_id   
+
+def create_message(sender,chat_id,contents):
+    connection = sqlite3.connect('users.db')
+    cursor = connection.cursor()
+
+    create_table = f"""
+            CREATE TABLE IF NOT EXISTS message (
+            msg_id INTEGER PRIMARY KEY NOT NULL,
+            sender TEXT,
+            chat_id INTEGER,
+            contents TEXT,
+            timestamp DATETIME
+        ) """
+    cursor.execute(create_table)
+
+    x = datetime.datetime.now() #get timestamp of message
+    
+    formatted_time = x.strftime("%Y-%m-%d %H:%M:%S")  # Format to exclude microseconds
+
+    cursor.execute(f"INSERT INTO message (sender, chat_id, contents, timestamp) VALUES ('{sender}', '{chat_id}', '{contents}','{formatted_time}')")
+    
+    print(formatted_time)
+    connection.commit()
+    connection.close()

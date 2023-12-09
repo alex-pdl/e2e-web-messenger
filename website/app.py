@@ -1,6 +1,6 @@
 from flask import Flask, url_for, render_template, redirect, request, flash, session
 from db_interaction import user_db_interaction
-from db_interaction import chat_creation, chats_retrieval
+from db_interaction import chat_creation, chats_retrieval,create_message,retrieve_chatid
 
 app = Flask(__name__)
 
@@ -72,10 +72,14 @@ def chats():
 
 @app.route('/message',methods = ['GET', 'POST'])
 def message():
-    if request.form.get('return') == 'clicked':
-            return redirect(url_for('chats'))
-            
     selected_name = request.args.get('selected_name')
+    if request.method == "POST":
+        if request.form.get('return') == 'clicked':
+            return redirect(url_for('chats'))
+        else:
+            message = request.form.get('message')
+            create_message(session['username'],retrieve_chatid(session['username'],selected_name),message)
+    
     return render_template('message.html',selected_user = selected_name)
 
 if __name__ == "__main__":
