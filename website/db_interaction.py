@@ -163,11 +163,15 @@ def create_message(sender,chat_id,contents):
 def retrieve_messages(chat_id):
     connection = sqlite3.connect('users.db')
     cursor = connection.cursor()
-    cursor.execute("SELECT contents FROM message WHERE chat_id = ? ORDER BY timestamp", (chat_id,))
-    raw_messages = cursor.fetchall()
-    
-    formatted_messages = []
-    for i in raw_messages:  #removes "[(', )]" from every message and appends it to a new list
-        formatted_messages.append(str(i).strip("[(', )]")) 
+    try:
+        cursor.execute("SELECT contents FROM message WHERE chat_id = ? ORDER BY timestamp", (chat_id,))
+        raw_messages = cursor.fetchall()
+        
+        formatted_messages = []
+        for i in raw_messages:  #removes "[(', )]" from every message and appends it to a new list
+            formatted_messages.append(str(i).strip("[(', )]")) 
 
-    return formatted_messages
+        return formatted_messages
+    except:
+        formatted_messages = ["You don't have any messages with this person, enter a message in the box to start!"]
+        return formatted_messages
