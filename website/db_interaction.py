@@ -154,8 +154,11 @@ def create_message(sender,chat_id,contents):
     
     formatted_time = x.strftime("%Y-%m-%d %H:%M:%S")  # Format to exclude microseconds
 
-    cursor.execute(f"INSERT INTO message (sender, chat_id, contents, timestamp) VALUES ('{sender}', '{chat_id}', '{contents}','{formatted_time}')")
-    
+    cursor.execute(
+    "INSERT INTO message (sender, chat_id, contents, timestamp) VALUES (?, ?, ?, ?)",
+    (sender, chat_id, contents, formatted_time)
+)
+
     print(formatted_time)
     connection.commit()
     connection.close()
@@ -164,7 +167,7 @@ def retrieve_messages(chat_id):
     connection = sqlite3.connect('users.db')
     cursor = connection.cursor()
     try:
-        cursor.execute("SELECT contents FROM message WHERE chat_id = ? ORDER BY timestamp", (chat_id,))
+        cursor.execute("SELECT timestamp,sender,contents FROM message WHERE chat_id = ? ORDER BY timestamp", (chat_id,))
         raw_messages = cursor.fetchall()
         
         formatted_messages = []
