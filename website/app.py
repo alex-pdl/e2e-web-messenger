@@ -1,6 +1,6 @@
 from flask import Flask, url_for, render_template, redirect, request, flash, session
 from db_interaction import user_db_interaction
-from db_interaction import chat_creation, chats_retrieval,create_message,retrieve_chatid
+from db_interaction import chat_creation, chats_retrieval,create_message,retrieve_chatid,retrieve_messages
 
 app = Flask(__name__)
 
@@ -79,8 +79,9 @@ def message():
         else:
             message = request.form.get('message')
             create_message(session['username'],retrieve_chatid(session['username'],selected_name),message)
-    
-    return render_template('message.html',selected_user = selected_name)
+
+    messages = retrieve_messages(retrieve_chatid(session['username'],selected_name))
+    return render_template('message.html',selected_user = selected_name,messages = messages)
 
 if __name__ == "__main__":
     app.config['SECRET_KEY'] = 'a98er23iur98erw980293dsfa'

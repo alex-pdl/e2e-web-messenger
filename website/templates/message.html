@@ -20,6 +20,9 @@
             <button type="submit" name="return" value="clicked">Return</button>
         </form>
     <hr>
+    {% for message in messages %}
+            <p>{{ message }}</p>
+    {% endfor %}
     <hr>
     <form method="post">
         <div>
