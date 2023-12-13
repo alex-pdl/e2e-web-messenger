@@ -1,6 +1,6 @@
 from flask import Flask, url_for, render_template, redirect, request, flash, session
 from db_interaction import user_db_interaction
-from db_interaction import chat_creation, chats_retrieval,create_message,retrieve_chatid,retrieve_messages
+from db_interaction import chat_creation, chats_retrieval,create_message,retrieve_chatid,retrieve_messages,special_char_checker
 
 app = Flask(__name__)
 
@@ -38,12 +38,17 @@ def registration():
     #submitting info (loggin in) uses POST, whereas loading the page uses GET
     if request.method == "POST":
         username = request.form.get('username')
-        password = request.form.get('password')
-        user = user_db_interaction(username,password)
-        if user_db_interaction.register(user) != False:
-            return redirect(url_for('login'))
+        #makes sure username doesn't have special characters
+        if special_char_checker(username) == None:
+            password = request.form.get('password')
+            user = user_db_interaction(username,password)
+            if user_db_interaction.register(user) != False:
+                return redirect(url_for('login'))
+            else:
+                error = "Sorry, this username is currently in use."
+            return render_template("registration.html",error=error)
         else:
-            error = "Sorry, this username is currently in use."
+            error = f"Sorry, you cannnot have special characters such as: '{ str(special_char_checker(username)) }'  in your username."
             return render_template("registration.html",error=error)
     return render_template("registration.html")
 
@@ -79,9 +84,11 @@ def message():
         else:
             message = request.form.get('message')
             create_message(session['username'],retrieve_chatid(session['username'],selected_name),message)
-
-    messages = retrieve_messages(retrieve_chatid(session['username'],selected_name))
-    return render_template('message.html',selected_user = selected_name,messages = messages)
+    try:
+        messages = retrieve_messages(retrieve_chatid(session['username'],selected_name))
+        return render_template('message.html',selected_user = selected_name,messages = messages)
+    except:
+        return redirect(url_for('chats'))
 
 if __name__ == "__main__":
     app.config['SECRET_KEY'] = 'a98er23iur98erw980293dsfa'
