@@ -15,7 +15,7 @@
         <form method="POST" action='{{url_for('registration')}}'>
             <div>
                 <label for="username">Username: </label>
-                <input type="text" id="username" name="username" maxlength="64" required>
+                <input type="text" id="username" name="username" minlength="4" maxlength="64"  required>
             </div>
             <div>
                 <label for="password">Password: </label>
