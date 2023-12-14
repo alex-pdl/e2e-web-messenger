@@ -92,4 +92,4 @@ def message():
 
 if __name__ == "__main__":
     app.config['SECRET_KEY'] = 'a98er23iur98erw980293dsfa'
-    app.run(debug=True, host='192.168.1.184')
+    app.run(debug=True)
