@@ -20,15 +20,17 @@ class user_db_interaction:
         create_users_table = """
                     CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY NOT NULL,
-                    username text,
-                    username_2 text
+                    username TEXT,
+                    password TEXT,
+                    private_key TEXT,
+                    public_key TEXT
                 ) """
         cursor.execute(create_users_table)
         create_chats_table = """
                     CREATE TABLE IF NOT EXISTS chats (
                     chatid INTEGER PRIMARY KEY NOT NULL,
-                    username_1 text,
-                    username_2 text
+                    username_1 TEXT,
+                    username_2 TEXT
                 ) """
         cursor.execute(create_chats_table)
         create_message_table = """
@@ -195,5 +197,5 @@ def special_char_checker(string):
                            ,"y","z","0","1","2","3",
                            "4","5","6","7","8","9","10"]
     for i in string:
-        if i not in allowed_characters:
+        if i.lower() not in allowed_characters:
             return i
