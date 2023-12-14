@@ -189,6 +189,7 @@ def retrieve_messages(chat_id):
 
 #function which checks if string has any special characters and if so, returns them
 def special_char_checker(string):
+    special_characters = []
     #users can only make usernames consisting of these characters.
     allowed_characters =  ["a","b","c","d","e","f"
                            ,"g","h","i","j","k","l"
@@ -198,4 +199,5 @@ def special_char_checker(string):
                            "4","5","6","7","8","9","10"]
     for i in string:
         if i.lower() not in allowed_characters:
-            return i
+            special_characters.append(i)
+    return special_characters

@@ -39,7 +39,7 @@ def registration():
     if request.method == "POST":
         username = request.form.get('username')
         #makes sure username doesn't have special characters
-        if special_char_checker(username) == None:
+        if len(special_char_checker(username)) == 0:
             password = request.form.get('password')
             user = user_db_interaction(username,password)
             if user_db_interaction.register(user) != False:
