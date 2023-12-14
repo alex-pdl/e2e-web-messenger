@@ -14,17 +14,40 @@ class user_db_interaction:
         return h.hexdigest()
     
     def register(self):
+        #creates database if it doesn't exist
+        connection = sqlite3.connect('users.db')
+        cursor = connection.cursor()
+        create_users_table = """
+                    CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY NOT NULL,
+                    username text,
+                    username_2 text
+                ) """
+        cursor.execute(create_users_table)
+        create_chats_table = """
+                    CREATE TABLE IF NOT EXISTS chats (
+                    chatid INTEGER PRIMARY KEY NOT NULL,
+                    username_1 text,
+                    username_2 text
+                ) """
+        cursor.execute(create_chats_table)
+        create_message_table = """
+            CREATE TABLE IF NOT EXISTS message (
+            msg_id INTEGER PRIMARY KEY NOT NULL,
+            sender TEXT,
+            chat_id INTEGER,
+            contents TEXT,
+            timestamp DATETIME
+        ) """
+        cursor.execute(create_message_table)
+        connection.commit()
+        connection.close()
+        
         #if username is not in use
         if self.username_check() == False:
             connection = sqlite3.connect('users.db')
             cursor = connection.cursor()
-            sql = """
-                CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY NOT NULL,
-                username TEXT,
-                password TEXT
-                )
-                """
+
             #inserting username & password hash into the database
             info = [
                     (self.username, self.hash())
@@ -90,14 +113,7 @@ def chat_creation(user_1, user_2):
             list_of_names = chats_retrieval(user_1)
             
             if user_1 not in list_of_names and user_2 not in list_of_names:
-                #adds the user and the user they choose to chat with to the 'chats' database
-                create_chats_table = """
-                    CREATE TABLE IF NOT EXISTS chats (
-                    chatid INTEGER PRIMARY KEY NOT NULL,
-                    username_1 INTEGER,
-                    username_2 INTEGER
-                ) """
-                cursor.execute(create_chats_table)
+                #adds the user and the person they choose to chat with to the 'chats' database
                 values = [
                     user_1,user_2
                 ]
@@ -139,16 +155,6 @@ def retrieve_chatid(username_1,username_2):
 def create_message(sender,chat_id,contents):
     connection = sqlite3.connect('users.db')
     cursor = connection.cursor()
-
-    create_table = f"""
-            CREATE TABLE IF NOT EXISTS message (
-            msg_id INTEGER PRIMARY KEY NOT NULL,
-            sender TEXT,
-            chat_id INTEGER,
-            contents TEXT,
-            timestamp DATETIME
-        ) """
-    cursor.execute(create_table)
 
     x = datetime.datetime.now() #get timestamp of message
     
