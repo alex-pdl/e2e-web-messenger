@@ -13,38 +13,7 @@ class user_db_interaction:
         h.update(self.password.encode())
         return h.hexdigest()
     
-    def register(self):
-        #creates database if it doesn't exist
-        connection = sqlite3.connect('users.db')
-        cursor = connection.cursor()
-        create_users_table = """
-                    CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY NOT NULL,
-                    username TEXT,
-                    password TEXT,
-                    private_key TEXT,
-                    public_key TEXT
-                ) """
-        cursor.execute(create_users_table)
-        create_chats_table = """
-                    CREATE TABLE IF NOT EXISTS chats (
-                    chatid INTEGER PRIMARY KEY NOT NULL,
-                    username_1 TEXT,
-                    username_2 TEXT
-                ) """
-        cursor.execute(create_chats_table)
-        create_message_table = """
-            CREATE TABLE IF NOT EXISTS message (
-            msg_id INTEGER PRIMARY KEY NOT NULL,
-            sender TEXT,
-            chat_id INTEGER,
-            contents TEXT,
-            timestamp DATETIME
-        ) """
-        cursor.execute(create_message_table)
-        connection.commit()
-        connection.close()
-        
+    def register(self):        
         #if username is not in use
         if self.username_check() == False:
             connection = sqlite3.connect('users.db')
@@ -116,6 +85,7 @@ def chat_creation(user_1, user_2):
                 cursor.execute("INSERT INTO chats (username_1,username_2) VALUES(?,?)", (values))
                 connection.commit()
                 connection.close()
+                return "Success"
             else:
                 return("Error_1")
         else:
@@ -195,3 +165,35 @@ def special_char_checker(string):
         if i.lower() not in allowed_characters:
             special_characters.append(i)
     return special_characters
+
+def create_database():
+    #creates database if it doesn't exist
+    connection = sqlite3.connect('users.db')
+    cursor = connection.cursor()
+    create_users_table = """
+                CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY NOT NULL,
+                username TEXT,
+                password TEXT,
+                private_key TEXT,
+                public_key TEXT
+            ) """
+    cursor.execute(create_users_table)
+    create_chats_table = """
+                CREATE TABLE IF NOT EXISTS chats (
+                chatid INTEGER PRIMARY KEY NOT NULL,
+                username_1 TEXT,
+                username_2 TEXT
+            ) """
+    cursor.execute(create_chats_table)
+    create_message_table = """
+        CREATE TABLE IF NOT EXISTS message (
+        msg_id INTEGER PRIMARY KEY NOT NULL,
+        sender TEXT,
+        chat_id INTEGER,
+        contents TEXT,
+        timestamp DATETIME
+    ) """
+    cursor.execute(create_message_table)
+    connection.commit()
+    connection.close()
