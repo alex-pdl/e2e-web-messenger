@@ -1,11 +1,12 @@
 from flask import Flask, url_for, render_template, redirect, request, flash, session
 from db_interaction import user_db_interaction
-from db_interaction import chat_creation, chats_retrieval,create_message,retrieve_chatid,retrieve_messages,special_char_checker
+from db_interaction import create_database,chat_creation, chats_retrieval,create_message,retrieve_chatid,retrieve_messages,special_char_checker
 
 app = Flask(__name__)
 
 @app.route('/')
 def homepage():
+    create_database()
     if 'usr_id' not in session:
         return redirect(url_for('login'))
     else:
