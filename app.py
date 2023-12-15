@@ -62,12 +62,12 @@ def chats():
             return redirect(url_for('login'))
         if request.method == "POST":
             user2 = request.form.get('user_chat_name')
-            chat_creation(session['username'],user2)
-            if chat_creation(session['username'],user2) == "Error_1":
+            result = chat_creation(session['username'],user2)
+            if result == "Error_1":
                 error = "You already have a chat with this person, you can't create another one."
-            elif chat_creation(session['username'],user2) == "Error_2":
+            elif result == "Error_2":
                 error = "This user doesn't seem to exist. Maybe you misspelt their username?"
-            elif chat_creation(session['username'],user2) == "Error_3":
+            elif result == "Error_3":
                 error = "You can't start a chat with yourself."
 
         names = chats_retrieval(session['username'])

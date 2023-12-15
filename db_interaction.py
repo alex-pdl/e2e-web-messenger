@@ -102,23 +102,17 @@ def chat_creation(user_1, user_2):
     #checks if user tried to chat with themselves
     if user_1 != user_2:
         #checks if user_2 exists
-        get_usernames = """SELECT username FROM users"""
-        cursor.execute(get_usernames)
+        cursor.execute("SELECT username FROM users")
         raw_existing_users = cursor.fetchall()
         existing_users = []
-    
+        #formats the name of the users by removing everything but the username
         for i in raw_existing_users:
             existing_users.append(str(i).strip("[(', )]"))
-
+        #checks if user 2 exists
         if user_2 in existing_users:
-            
-            list_of_names = chats_retrieval(user_1)
-            
-            if user_1 not in list_of_names and user_2 not in list_of_names:
+            if retrieve_chatid(user_1,user_2) == "None":  #Checks if user already has chat with this person
                 #adds the user and the person they choose to chat with to the 'chats' database
-                values = [
-                    user_1,user_2
-                ]
+                values = [user_1,user_2]
                 cursor.execute("INSERT INTO chats (username_1,username_2) VALUES(?,?)", (values))
                 connection.commit()
                 connection.close()
