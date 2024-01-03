@@ -1,6 +1,6 @@
 from flask import Flask, url_for, render_template, redirect, request, flash, session
 from db_interaction import user_db_interaction
-from db_interaction import create_database,chat_creation, chats_retrieval,create_message,retrieve_chatid,retrieve_messages,special_char_checker
+from db_interaction import create_database,chat_creation, chats_retrieval,create_message,retrieve_chatid,retrieve_messages,special_char_checker,ascii_checker
 
 app = Flask(__name__)
 
@@ -43,11 +43,16 @@ def registration():
         if len(special_char_checker(username)) == 0:
             password = request.form.get('password')
             user = user_db_interaction(username,password)
-            if user_db_interaction.register(user) != False:
-                return redirect(url_for('login'))
+            #makes sure password doesn't have any characters that cannot be represented as ASCII values
+            if len(ascii_checker(password)) == 0:
+                if user_db_interaction.register(user) != False:
+                    return redirect(url_for('login'))
+                else:
+                    error = "Sorry, this username is currently in use."
+                return render_template("registration.html",error=error)
             else:
-                error = "Sorry, this username is currently in use."
-            return render_template("registration.html",error=error)
+                error = f"Sorry, you password cannot contain the following special characters: {ascii_checker(password)}"
+                return render_template("registration.html",error=error)
         else:
             error = f"Sorry, you cannnot have special characters such as: '{ str(special_char_checker(username)) }'  in your username."
             return render_template("registration.html",error=error)

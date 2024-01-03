@@ -166,8 +166,17 @@ def special_char_checker(string):
             special_characters.append(i)
     return special_characters
 
+def ascii_checker(string): 
+    #returns a list of all characters in a string which cannot be represented as an ascii character
+    #this is needed to ensure the hashing and encryption algorithms work properly
+    list_of_special_chars = []
+    for char in string:
+        if ord(char) > 128:
+            list_of_special_chars.append(char)
+    return list_of_special_chars
+
 def create_database():
-    #creates database if it doesn't exist
+    #creates database with all tables if it doesn't already exist
     connection = sqlite3.connect('users.db')
     cursor = connection.cursor()
     create_users_table = """

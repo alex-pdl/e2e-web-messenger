@@ -12,7 +12,6 @@ def conversion(text,covert_to):
             bin_nums = [128,64,32,16,8,4,2,1]
             converted = ""
 #if its greater than the most significant bit (MSB), which in this case is 128, then just make it equal to MSB
-#the reason for this is highlighted in my documentation
             if value > bin_nums[0]:
                 value = bin_nums[0]
             for i in range(len(bin_nums)):
