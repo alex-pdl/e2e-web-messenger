@@ -162,7 +162,7 @@ def special_char_checker(string):
                            ,"y","z","0","1","2","3",
                            "4","5","6","7","8","9","10"]
     for i in string:
-        if i.lower() not in allowed_characters:
+        if i.lower() not in allowed_characters and i.lower() not in special_characters:
             special_characters.append(i)
     return special_characters
 
@@ -171,7 +171,7 @@ def ascii_checker(string):
     #this is needed to ensure the hashing and encryption algorithms work properly
     list_of_special_chars = []
     for char in string:
-        if ord(char) > 128:
+        if ord(char) > 128 and char not in list_of_special_chars:
             list_of_special_chars.append(char)
     return list_of_special_chars
 
