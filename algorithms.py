@@ -24,7 +24,15 @@ def conversion(text,covert_to):
         return bin_values
     
     elif str(covert_to).lower() == "hex": #converts the input to hexadecimal
-        pass
+        bin_nums = [128,64,32,16,8,4,2,1]
+        count = 0
+        value = 0
+        #converts binary value to decimal and stores it variable called value
+        for binary_value in text:
+            for num in binary_value:
+                value += int(num) * bin_nums[count]
+                count += 1
+        return value
 
 def hash(text, salt, iterations):
     pass
