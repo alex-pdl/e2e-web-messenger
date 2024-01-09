@@ -19,18 +19,25 @@ def hash(ascii_values, iteration, iterations, prime_number):
     if iteration < iterations:
         iteration += 1
         ascii_version = []
+        #make the list of ascii_values specifically a length of 48
+        if len(ascii_values) != 48:
+            while len(ascii_values) < 48:
+                ascii_values = ascii_values * 2 
+            ascii_values = ascii_values[:48]
+
         # gets the sum of that ascii list
         total = sum(ascii_values)
-        # divides the sum by a specified prime number and makes it a long integer
+        # divides the sum by a specified prime number and removes its power of 10 making it just an integer
         divisor = str(total / prime_number)
         divisor = int(divisor.replace('.', '', 1))
+        # each element in the list gets multiplied by the previous element
         for i in range(len(ascii_values)):
-            if ascii_values[i-1] % prime_number != 0:
-                ascii_values[i] = ascii_values[i] * (ascii_values[i-1] % prime_number)
+            if ascii_values[i] * ascii_values[i-1] != 0:
+                ascii_values[i] = ascii_values[i] * ascii_values[i-1]
         
         for ascii_value in ascii_values:
-            # for every ascii value in the list of ascii values
-            # divide by the divisor and create another long integer from that ascii value
+            # for every ascii value in the list
+            # divide by the divisor and create another integer from that ascii value
             # then get the last three digits of that ascii value
 
             result = ascii_value / divisor
@@ -38,8 +45,8 @@ def hash(ascii_values, iteration, iterations, prime_number):
             result = str(result * 10**(int(result_str[-2:].replace('.', ''))))
             last_three_ints = int(result[-3:].replace('.', ''))
 
-            # now if those last three digits are greater than 127, divide by the prime number until they are under 12
-            # 127 is used as it is the limit of ascii values
+            # now if those last three digits are greater than 127,perform floor devision by the prime number until each value is under under 127
+            # this is because 127 is used as it is the limit of ascii values
             while last_three_ints > 127:
                 last_three_ints = last_three_ints // prime_number
             ascii_version.append(last_three_ints)
