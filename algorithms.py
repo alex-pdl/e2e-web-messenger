@@ -24,7 +24,6 @@ def hash(ascii_values, iteration, iterations, prime_number):
             while len(ascii_values) < 48:
                 ascii_values = ascii_values * 2 
             ascii_values = ascii_values[:48]
-
         # gets the sum of that ascii list
         total = sum(ascii_values)
         # divides the sum by a specified prime number and removes its power of 10 making it just an integer
@@ -58,10 +57,31 @@ def hash(ascii_values, iteration, iterations, prime_number):
 def hash_password(text, salt, iterations, prime_number):
     raw_values = convert_to_hex(hash(convert_to_ascii(text,salt),0,iterations,prime_number))
     formatted_values = ''.join(raw_values)
-    return formatted_values
+    return formatted_values[:48]
 
-def symmetric_encryption():
-    pass
+def sym_encryption(text, key, iteration, iterations):
+    new_text = ""
+    iteration += 1
+    if iteration < iterations:
+        for i in range(len(text)):
+            shift_value = int(str(ord(key[i]))[-1])
+            shifted_char = chr((ord(text[i]) + shift_value) % 128)  # Modulo to stay within ASCII range
+            new_text += shifted_char
+        # Update 'text' with the result of the recursive call
+        text = sym_encryption(new_text, key, iteration, iterations)
+    return text
+
+def sym_decryption(cipher, key, iteration, iterations):
+    new_text = ""
+    iteration += 1
+    if iteration < iterations:
+        for i in range(len(cipher)):
+            shift_value = int(str(ord(key[i]))[-1])
+            shifted_char = chr((ord(cipher[i]) - shift_value) % 128)  # Modulo to stay within ASCII range
+            new_text += shifted_char
+        # Update 'cipher' with the result of the recursive call
+        cipher = sym_decryption(new_text, key, iteration, iterations)
+    return cipher
 
 def RSA():
     pass
