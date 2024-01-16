@@ -63,6 +63,7 @@ def sym_encryption(text, key, iteration, iterations):
     new_text = ""
     iteration += 1
     if iteration < iterations:
+        # Shift the ASCII value of each character by the last number of the ASCII value of the character of the key
         for i in range(len(text)):
             shift_value = int(str(ord(key[i]))[-1])
             shifted_char = chr((ord(text[i]) + shift_value) % 128)  # Modulo to stay within ASCII range
@@ -75,6 +76,7 @@ def sym_decryption(cipher, key, iteration, iterations):
     new_text = ""
     iteration += 1
     if iteration < iterations:
+        # Shift but in the opposite direction
         for i in range(len(cipher)):
             shift_value = int(str(ord(key[i]))[-1])
             shifted_char = chr((ord(cipher[i]) - shift_value) % 128)  # Modulo to stay within ASCII range
