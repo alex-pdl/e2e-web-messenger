@@ -1,4 +1,7 @@
 import binascii
+import random
+import math
+import sympy
 
 def convert_to_ascii(text,salt):
     ascii_version = []
@@ -14,6 +17,15 @@ def convert_to_hex(ascii_values):
         hex_version = hex(value)
         hex_values.append(hex_version[2:])
     return hex_values
+
+# Converts a string e.g. "[3123,4324,1233]" to a list [3123,4324,1233]
+def string_to_list(input_string):
+    # Remove brackets and split the string by commas
+    elements = input_string[1:-1].split(',')
+    result_list = []
+    for element in elements:
+        result_list.append(int(element))
+    return result_list
 
 def hash(ascii_values, iteration, iterations, prime_number):
     if iteration < iterations:
@@ -72,6 +84,7 @@ def sym_encryption(text, key, iteration, iterations):
         text = sym_encryption(new_text, key, iteration, iterations)
     return text
 
+# Decrypts the cipher
 def sym_decryption(cipher, key, iteration, iterations):
     new_text = ""
     iteration += 1
@@ -85,5 +98,58 @@ def sym_decryption(cipher, key, iteration, iterations):
         cipher = sym_decryption(new_text, key, iteration, iterations)
     return cipher
 
-def RSA():
-    pass
+# Deterministic prime number checker
+def is_prime(number):
+    # Gets every number between 2 and the square of the number + 1
+    for i in range(2, int(number**0.5)+1):
+    # Checks if the number is divisible by any of those numbers
+        if number % i == 0:
+            return False
+    # If not, the number is prime
+    return True
+
+def generate_prime(bits, type="default"):
+    while True:
+        num = random.getrandbits(bits)
+        if type == "default":
+            if sympy.isprime(num):
+                return num
+        elif type == "custom":
+            if is_prime(num):
+                return num
+
+def extended_gcd(a, b):
+    if a == 0:
+        return b, 0, 1
+    else:
+        g, x, y = extended_gcd(b % a, a)
+        return g, y - (b // a) * x, x
+
+def modinv(a, m):
+    g, x, y = extended_gcd(a, m)
+    return x % m
+
+def key_gen(bits):
+    p = generate_prime(bits)
+    q = generate_prime(bits)
+    n = p * q
+    phi_func = (p - 1) * (q - 1)
+    e = 65537
+    d = modinv(e, phi_func)
+    return (n, e), (n, d)
+
+def RSA_Encrypt(public_key, plaintext):
+    n, e = public_key
+    ciphertext = []
+    for char in plaintext:
+        #ciphertext = pow(plaintext, e, n)
+        ciphertext.append(pow(ord(char), e, n))
+    return ciphertext
+
+def RSA_Decrypt(private_key, ciphertext):
+    n, d = private_key
+    ciphertext = string_to_list(ciphertext)
+    plaintext = ""
+    for num in ciphertext:
+        plaintext += chr(pow(num, d, n))
+    return plaintext
