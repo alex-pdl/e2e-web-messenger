@@ -1,6 +1,18 @@
 from flask import Flask, url_for, render_template, redirect, request, flash, session
-from db_interaction import user_db_interaction
-from db_interaction import create_database,chat_creation, chats_retrieval,create_message,retrieve_chatid,retrieve_messages,special_char_checker,ascii_checker
+from db_interaction import *
+from algorithms import *
+import json
+
+# Retrieving settings from .json file
+with open('settings.json', 'r') as file:
+    data = json.load(file)
+
+salt = data["salt"]
+iterations = data["iterations"]
+prime_number = data["primenumber"]
+keysize = data["keysize"]
+
+print("Please change the default values within settings.json if not done so already!")
 
 app = Flask(__name__)
 
@@ -18,13 +30,14 @@ def login():
         if request.method == "POST":
             username = request.form.get('username')
             password = request.form.get('password')
-            
+            hashed_pass = hash_password(password,salt,iterations,prime_number)
             global user
-            user = user_db_interaction(username,password)
-            #if user entered in correct info:
+            user = user_db_interaction(username,hashed_pass)
+            # If user entered in correct info:
             if user_db_interaction.password_check(user) == True:
                 session['username'] = username
                 session['usr_id'] = user_db_interaction.retrieve_user_id(user)
+                session['private_key'] = sym_decryption(user_db_interaction.retrieve_privatekey(user),password,0,iterations)
                 return redirect(url_for('chats'))
             else:
                 error = "You have not entered in the correct information. Please try again."
@@ -36,14 +49,18 @@ def login():
 
 @app.route('/registration', methods = ['GET','POST'])
 def registration():
-    #submitting info (loggin in) uses POST, whereas loading the page uses GET
+    create_database()
+    # Submitting info (loggin in) uses POST, whereas loading the page uses GET
     if request.method == "POST":
         username = request.form.get('username')
-        #makes sure username doesn't have special characters
+        # Makes sure username doesn't have special characters
         if len(special_char_checker(username)) == 0:
             password = request.form.get('password')
-            user = user_db_interaction(username,password)
-            #makes sure password doesn't have any characters that cannot be represented as ASCII values
+            public_key,private_key = key_gen(keysize)
+            private_key = sym_encryption(str(private_key),password,0,iterations)
+            hashed_pass = hash_password(request.form.get('password'),salt,iterations,prime_number)
+            user = user_db_interaction(username,hashed_pass,str(public_key),private_key)
+            # Makes sure password doesn't have any characters that cannot be represented as ASCII values
             if len(ascii_checker(password)) == 0:
                 if user_db_interaction.register(user) != False:
                     return redirect(url_for('login'))
@@ -60,7 +77,7 @@ def registration():
 
 @app.route('/chats', methods = ['GET','POST'])
 def chats():
-    #try and except is used as, if a user tries to reach the chats without logging in first, flask will produce an error
+    # Try and except is used as, if a user tries to reach the chats without logging in first, flask will produce an error
     try:
         error = ""
         if request.form.get('logout') == 'clicked':
@@ -89,10 +106,38 @@ def message():
             return redirect(url_for('chats'))
         else:
             message = request.form.get('message')
-            create_message(session['username'],retrieve_chatid(session['username'],selected_name),message)
+            # Create two versions of the message, 1 encrypted using the senders info, and the other using the recievers info
+            receivers_message = RSA_Encrypt(message,string_to_tuple(retrieve_public_key(selected_name)))
+            senders_message = RSA_Encrypt(message,string_to_tuple(retrieve_public_key(session['username'])))
+            # Determine which column (contents_1 or contents_2) the sender is a part of
+            chatid = retrieve_chatid(session["username"],selected_name)
+            which_contents = determine_column(session["username"],chatid)
+            if which_contents == "contents_1":
+                create_message(session['username'],retrieve_chatid(session['username'],selected_name),str(senders_message),str(receivers_message))
+            elif which_contents == "contents_2":
+                create_message(session['username'],retrieve_chatid(session['username'],selected_name),str(receivers_message),str(senders_message))
     try:
-        messages = retrieve_messages(retrieve_chatid(session['username'],selected_name))
-        return render_template('message.html',selected_user = selected_name,messages = messages)
+        try:
+            chatid = retrieve_chatid(session["username"],selected_name)
+            which_contents = determine_column(session["username"],chatid)
+            msg_info, encrypted_message_contents = retrieve_messages(retrieve_chatid(session['username'],selected_name),which_contents)
+            messages = []
+            for index in range(len(msg_info)):
+                # Get each individual sender and timestamp
+                info = msg_info[index]
+                # Get each message (encrypted)
+                encrypted_contents = encrypted_message_contents[index][0]
+                # Format the sender and timestamp & append to messages
+                formatted_info = str(info).replace("(", "").replace(")", "").replace("'", "")
+                messages.append(str(formatted_info))
+                # Format the message contents and decrypt
+                # Then add to messages list
+                formatted_decrypted_message = ": " + RSA_Decrypt(encrypted_contents,string_to_tuple(session['private_key']))
+                messages[index] += formatted_decrypted_message
+            return render_template('message.html',selected_user = selected_name,messages = messages)
+        except:
+            error = ["It appears you don't have any messages with this person."]
+            return render_template('message.html',selected_user = selected_name,messages = error)
     except:
         return redirect(url_for('chats'))
 

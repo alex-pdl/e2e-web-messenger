@@ -3,16 +3,12 @@ import hashlib
 import datetime
 
 class user_db_interaction:
-    def __init__(self, username, password):
+    def __init__(self, username, password, public_key="public_key", private_key="priavate_key"):
         self.username = username
         self.password = password
+        self.public_key = public_key
+        self.private_key = private_key
 
-    #function hashes the password attribute of the class user and returns the hash password
-    def hash(self):
-        h = hashlib.new('SHA256')
-        h.update(self.password.encode())
-        return h.hexdigest()
-    
     def register(self):        
         #if username is not in use
         if self.username_check() == False:
@@ -21,9 +17,9 @@ class user_db_interaction:
 
             #inserting username & password hash into the database
             info = [
-                    (self.username, self.hash())
+                    (self.username, self.password,self.public_key,self.private_key)
             ]
-            cursor.executemany("INSERT INTO users (username, password) VALUES (?,?)", info)
+            cursor.executemany("INSERT INTO users (username,password,public_key,private_key) VALUES (?,?,?,?)", info)
             #committing changes & closing the connection
             connection.commit()
             connection.close()
@@ -36,7 +32,7 @@ class user_db_interaction:
         cursor.execute("SELECT password FROM users WHERE username = (?)", (self.username,))
         #when the pass hash is fetched, it is in the form of a list and has many characters that aren't part of the hash
         hashed_pass = str(cursor.fetchall()).strip("[(', )]")
-        if self.hash() == hashed_pass:
+        if self.password == hashed_pass:
             return True
         else:
             return False
@@ -64,6 +60,15 @@ class user_db_interaction:
         connection.commit()
         connection.close()
         return retrieved_id
+    
+    def retrieve_privatekey(self):
+        connection = sqlite3.connect('users.db')
+        cursor = connection.cursor()
+        cursor.execute("SELECT private_key FROm users WHERE username = (?)", (self.username,))
+        encrypted_private_key = str(cursor.fetchall()).strip("[(', )]")
+        connection.commit()
+        connection.close()
+        return encrypted_private_key
     
 def chat_creation(user_1, user_2):
     connection = sqlite3.connect('users.db')
@@ -118,7 +123,7 @@ def retrieve_chatid(username_1,username_2):
     connection.close()
     return chat_id   
 
-def create_message(sender,chat_id,contents):
+def create_message(sender,chat_id,contents_1, contents_2):
     connection = sqlite3.connect('users.db')
     cursor = connection.cursor()
 
@@ -126,30 +131,44 @@ def create_message(sender,chat_id,contents):
     
     formatted_time = x.strftime("%Y-%m-%d %H:%M:%S")  # Format to exclude microseconds
 
-    cursor.execute(
-    "INSERT INTO message (sender, chat_id, contents, timestamp) VALUES (?, ?, ?, ?)",
-    (sender, chat_id, contents, formatted_time)
-)
+    cursor.execute("INSERT INTO message (sender, chat_id, contents_1, contents_2, timestamp) VALUES (?, ?, ?, ?, ?)",
+    (sender, chat_id, contents_1, contents_2, formatted_time))
 
-    print(formatted_time)
     connection.commit()
     connection.close()
 
-def retrieve_messages(chat_id):
+def retrieve_messages(chat_id,which_contents):
     connection = sqlite3.connect('users.db')
     cursor = connection.cursor()
     try:
-        cursor.execute("SELECT timestamp,sender,contents FROM message WHERE chat_id = ? ORDER BY timestamp", (chat_id,))
-        raw_messages = cursor.fetchall()
-        
-        formatted_messages = []
-        for i in raw_messages:  #removes "[(', )]" from every message and appends it to a new list
-            formatted_messages.append(str(i).strip("[(', )]")) 
-
-        return formatted_messages
+        cursor.execute("SELECT timestamp,sender FROM message WHERE chat_id = ? ORDER BY timestamp", (chat_id,))
+        message_info = cursor.fetchall()
+        cursor.execute(f"SELECT {which_contents} FROM message WHERE chat_id = ? ORDER BY timestamp", (chat_id,))
+        contents = cursor.fetchall()
+        return message_info,contents
     except:
-        formatted_messages = ["You don't have any messages with this person, enter a message in the box to start!"]
-        return formatted_messages
+        pass
+
+def retrieve_public_key(username):
+    connection = sqlite3.connect('users.db')
+    cursor = connection.cursor()
+    cursor.execute("SELECT public_key FROM users WHERE username = (?)", (username,))
+    public_key = str(cursor.fetchone()).strip("[(', )]")
+    connection.close()
+    return public_key
+
+def determine_column(username,chatid):
+    # Determine which column (contents_1 or contents_2) the sender is a part of
+    connection = sqlite3.connect('users.db')
+    cursor = connection.cursor()
+    # If the user's username is stored in username_1, their message contents is stored in conents_1 and vica versa
+    cursor.execute("SELECT username_1 FROM chats WHERE chatid = (?)", (chatid,))
+    username_1 = str(cursor.fetchone()).strip("[(', )]")
+    connection.close()
+    if username == username_1:
+        return "contents_1"
+    else:
+        return "contents_2"
 
 #function which checks if string has any special characters and if so, returns them
 def special_char_checker(string):
@@ -200,7 +219,8 @@ def create_database():
         msg_id INTEGER PRIMARY KEY NOT NULL,
         sender TEXT,
         chat_id INTEGER,
-        contents TEXT,
+        contents_1 TEXT,
+        contents_2 TEXT,
         timestamp DATETIME
     ) """
     cursor.execute(create_message_table)

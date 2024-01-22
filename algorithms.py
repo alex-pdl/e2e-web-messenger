@@ -1,4 +1,3 @@
-import binascii
 import random
 import math
 import sympy
@@ -26,6 +25,15 @@ def string_to_list(input_string):
     for element in elements:
         result_list.append(int(element))
     return result_list
+
+def string_to_tuple(input_str):
+    # Remove leading and trailing whitespace, and parentheses
+    cleaned_str = input_str.strip("()")
+    # Split the cleaned string into individual elements
+    elements = cleaned_str.split(',')
+    # Convert elements to integers and create a tuple
+    result_tuple = tuple(map(int, elements))
+    return result_tuple
 
 def hash(ascii_values, iteration, iterations, prime_number):
     if iteration < iterations:
@@ -74,6 +82,8 @@ def hash_password(text, salt, iterations, prime_number):
 def sym_encryption(text, key, iteration, iterations):
     new_text = ""
     iteration += 1
+    while len(text) > len(key):
+        key = key * 2
     if iteration < iterations:
         # Shift the ASCII value of each character by the last number of the ASCII value of the character of the key
         for i in range(len(text)):
@@ -88,6 +98,8 @@ def sym_encryption(text, key, iteration, iterations):
 def sym_decryption(cipher, key, iteration, iterations):
     new_text = ""
     iteration += 1
+    while len(cipher) > len(key):
+        key = key * 2
     if iteration < iterations:
         # Shift but in the opposite direction
         for i in range(len(cipher)):
@@ -130,15 +142,15 @@ def modinv(a, m):
     return x % m
 
 def key_gen(bits):
-    p = generate_prime(bits)
-    q = generate_prime(bits)
+    p = generate_prime(bits//2)
+    q = generate_prime(bits//2)
     n = p * q
     phi_func = (p - 1) * (q - 1)
     e = 65537
     d = modinv(e, phi_func)
     return (n, e), (n, d)
 
-def RSA_Encrypt(public_key, plaintext):
+def RSA_Encrypt(plaintext, public_key):
     n, e = public_key
     ciphertext = []
     for char in plaintext:
@@ -146,7 +158,7 @@ def RSA_Encrypt(public_key, plaintext):
         ciphertext.append(pow(ord(char), e, n))
     return ciphertext
 
-def RSA_Decrypt(private_key, ciphertext):
+def RSA_Decrypt(ciphertext,private_key):
     n, d = private_key
     ciphertext = string_to_list(ciphertext)
     plaintext = ""
