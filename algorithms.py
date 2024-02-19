@@ -154,7 +154,6 @@ def RSA_Encrypt(plaintext, public_key):
     n, e = public_key
     ciphertext = []
     for char in plaintext:
-        #ciphertext = pow(plaintext, e, n)
         ciphertext.append(pow(ord(char), e, n))
     return ciphertext
 
