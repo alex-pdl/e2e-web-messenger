@@ -2,5 +2,5 @@
     "salt": "Default",
     "iterations": 5,
     "primenumber": 7,
-    "keysize":2048
+    "keysize":1028
 }

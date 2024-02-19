@@ -2,6 +2,7 @@ from flask import Flask, url_for, render_template, redirect, request, flash, ses
 from db_interaction import *
 from algorithms import *
 import json
+import sys
 
 # Retrieving settings from .json file
 with open('settings.json', 'r') as file:
@@ -12,7 +13,10 @@ iterations = data["iterations"]
 prime_number = data["primenumber"]
 keysize = data["keysize"]
 
-print("Please change the default values within settings.json if not done so already!")
+if keysize < 256:
+    sys.exit("Please keep key length above 256! If not, the program will crash if you enter a message above the key size!")
+
+print("Please change the default salt and prime number values within settings.json if not done so already!")
 
 app = Flask(__name__)
 
