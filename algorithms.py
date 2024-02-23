@@ -126,7 +126,7 @@ def generate_prime(bits, type="default"):
         if type == "default":
             if sympy.isprime(num):
                 return num
-        elif type == "custom":
+        if type == "custom":        
             if is_prime(num):
                 return num
 
