@@ -12,11 +12,12 @@ salt = data["salt"]
 iterations = data["iterations"]
 prime_number = data["primenumber"]
 keysize = data["keysize"]
+secret_key = data["secret_key"]
 
 if keysize < 256:
     sys.exit("Please keep key length above 256! If not, the program will crash if you enter a message above the key size!")
 
-print("Please change the default salt and prime number values within settings.json if not done so already!")
+print("Please change the default salt, secret key and prime number values within settings.json if not done so already!")
 
 app = Flask(__name__)
 
@@ -145,5 +146,5 @@ def message():
         return redirect(url_for('chats'))
 
 if __name__ == "__main__":
-    app.config['SECRET_KEY'] = 'a98er23iur98erw980293dsfa'
+    app.config['SECRET_KEY'] = f'{secret_key}' # Use secret key specified in settings.json file
     app.run(debug=True)
