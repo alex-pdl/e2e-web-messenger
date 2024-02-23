@@ -139,8 +139,7 @@ def message():
                 formatted_decrypted_message = ": " + RSA_Decrypt(encrypted_contents,string_to_tuple(session['private_key']))
                 messages[index] += formatted_decrypted_message
             return render_template('message.html',selected_user = selected_name,messages = messages)
-        except:
-            error = ["It appears you don't have any messages with this person."]
+        except Exception as error:
             return render_template('message.html',selected_user = selected_name,messages = error)
     except:
         return redirect(url_for('chats'))
