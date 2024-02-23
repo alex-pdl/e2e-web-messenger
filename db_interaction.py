@@ -1,5 +1,4 @@
 import sqlite3
-import hashlib
 import datetime
 
 class user_db_interaction:
