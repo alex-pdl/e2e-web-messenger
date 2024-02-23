@@ -130,11 +130,16 @@ def generate_prime(bits, type="default"):
             if is_prime(num):
                 return num
 
+# Finds the greatest common divisor between two numbers 
 def extended_gcd(a, b):
-    if a == 0:
+    if a == 0: # The base case
         return b, 0, 1
     else:
-        g, x, y = extended_gcd(b % a, a)
+        # Keep recursing  'b' mod  'a' and 'a' to eventually reach the base case.
+        g, x, y = extended_gcd(b % a, a) 
+        # When base case is reached, g will be the GCD
+        # and y will contain the values that satisfy the equation g=ax+by
+        # Then perform a simple calculation to find x and y
         return g, y - (b // a) * x, x
 
 def modinv(a, m):
