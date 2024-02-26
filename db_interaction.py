@@ -31,12 +31,13 @@ class user_db_interaction:
         cursor.execute("SELECT password FROM users WHERE username = (?)", (self.username,))
         #when the pass hash is fetched, it is in the form of a list and has many characters that aren't part of the hash
         hashed_pass = str(cursor.fetchall()).strip("[(', )]")
+        connection.commit()
+        connection.close()
+
         if self.password == hashed_pass:
             return True
         else:
             return False
-        connection.commit()
-        connection.close()
         
     #checks if the username is not in use
     def username_check(self):
@@ -58,14 +59,14 @@ class user_db_interaction:
         retrieved_id = str(cursor.fetchall()).strip("[(', )]")
         connection.commit()
         connection.close()
-        return retrieved_id
-    
+        return retrieved_id    
+
     def retrieve_privatekey(self):
         connection = sqlite3.connect('users.db')
         cursor = connection.cursor()
-        cursor.execute("SELECT private_key FROM users WHERE username = (?)", (self.username,))
-        encrypted_private_key = str(cursor.fetchall()).strip("[(', )]")
-        connection.commit()
+        cursor.execute("SELECT private_key FROM users WHERE username = ?", (self.username,))
+        result = cursor.fetchone()
+        encrypted_private_key = result[0]
         connection.close()
         return encrypted_private_key
     

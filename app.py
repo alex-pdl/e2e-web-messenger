@@ -76,7 +76,7 @@ def registration():
                 error = f"Sorry, you password cannot contain the following special characters: {ascii_checker(password)}"
                 return render_template("registration.html",error=error)
         else:
-            error = f"Sorry, you cannnot have special characters such as: '{ str(special_char_checker(username)) }'  in your username."
+            error = f"Sorry, you cannot have special characters such as: '{special_char_checker(username)}' in your username."
             return render_template("registration.html",error=error)
     return render_template("registration.html")
 
@@ -122,26 +122,25 @@ def message():
             elif which_contents == "contents_2":
                 create_message(session['username'],retrieve_chatid(session['username'],selected_name),str(receivers_message),str(senders_message))
     try:
-        try:
-            chatid = retrieve_chatid(session["username"],selected_name)
-            which_contents = determine_column(session["username"],chatid)
-            msg_info, encrypted_message_contents = retrieve_messages(retrieve_chatid(session['username'],selected_name),which_contents)
-            messages = []
-            for index in range(len(msg_info)):
-                # Get each individual sender and timestamp
-                info = msg_info[index]
-                # Get each message (encrypted)
-                encrypted_contents = encrypted_message_contents[index][0]
-                # Format the sender and timestamp & append to messages
-                formatted_info = str(info).replace("(", "").replace(")", "").replace("'", "")
-                messages.append(str(formatted_info))
-                # Format the message contents and decrypt
-                # Then add to messages list
-                formatted_decrypted_message = ": " + RSA_Decrypt(encrypted_contents,string_to_tuple(session['private_key']))
-                messages[index] += formatted_decrypted_message
-            return render_template('message.html',selected_user = selected_name,messages = messages)
-        except Exception as error:
-            return render_template('message.html',selected_user = selected_name,messages = error)
+        chatid = retrieve_chatid(session["username"],selected_name)
+        which_contents = determine_column(session["username"],chatid)
+        msg_info, encrypted_message_contents = retrieve_messages(retrieve_chatid(session['username'],selected_name),which_contents)
+        messages = []
+        for index in range(len(msg_info)):
+            # Get each individual sender and timestamp
+            info = msg_info[index]
+            # Get each message (encrypted)
+            encrypted_contents = encrypted_message_contents[index][0]
+            # Format the sender and timestamp & append to messages
+            formatted_info = str(info).replace("(", "").replace(")", "").replace("'", "")
+            messages.append(str(formatted_info))
+            # Format the message contents and decrypt
+            # Then add to messages list
+            formatted_decrypted_message = ": " + RSA_Decrypt(encrypted_contents,string_to_tuple(session['private_key']))
+            messages[index] += formatted_decrypted_message
+        if len(messages) == 0:
+            messages = ["It appears you don't have any chats with this person, say hi!"]
+        return render_template('message.html',selected_user = selected_name,messages = messages)
     except:
         return redirect(url_for('chats'))
 
