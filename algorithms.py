@@ -81,33 +81,31 @@ def hash_password(text, salt, iterations, prime_number):
 
 def sym_encryption(text, key, iteration, iterations):
     new_text = ""
-    iteration += 1
-    while len(text) > len(key):
-        key = key * 2
+    while len(text) > len(key) or len(text) == len(key):
+        key += key  # Extend the key by appending itself
     if iteration < iterations:
         # Shift the ASCII value of each character by the last number of the ASCII value of the character of the key
         for i in range(len(text)):
             shift_value = int(str(ord(key[i]))[-1])
             shifted_char = chr((ord(text[i]) + shift_value) % 128)  # Modulo to stay within ASCII range
             new_text += shifted_char
-        # Update 'text' with the result of the recursive call
-        text = sym_encryption(new_text, key, iteration, iterations)
+        # Update 'text' with the result of recursing
+        text = sym_encryption(new_text, key, iteration + 1, iterations)
     return text
 
 # Decrypts the cipher
 def sym_decryption(cipher, key, iteration, iterations):
-    new_text = ""
-    iteration += 1
-    while len(cipher) > len(key):
-        key = key * 2
+    new_cipher = ""
+    while len(cipher) > len(key) or len(cipher) == len(key):
+        key += key  # Extend the key by appending itself
     if iteration < iterations:
         # Shift but in the opposite direction
         for i in range(len(cipher)):
             shift_value = int(str(ord(key[i]))[-1])
             shifted_char = chr((ord(cipher[i]) - shift_value) % 128)  # Modulo to stay within ASCII range
-            new_text += shifted_char
-        # Update 'cipher' with the result of the recursive call
-        cipher = sym_decryption(new_text, key, iteration, iterations)
+            new_cipher += shifted_char
+        # Update 'cipher' with the result of recursing
+        cipher = sym_decryption(new_cipher, key, iteration + 1, iterations)
     return cipher
 
 # Deterministic prime number checker

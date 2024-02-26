@@ -63,7 +63,7 @@ class user_db_interaction:
     def retrieve_privatekey(self):
         connection = sqlite3.connect('users.db')
         cursor = connection.cursor()
-        cursor.execute("SELECT private_key FROm users WHERE username = (?)", (self.username,))
+        cursor.execute("SELECT private_key FROM users WHERE username = (?)", (self.username,))
         encrypted_private_key = str(cursor.fetchall()).strip("[(', )]")
         connection.commit()
         connection.close()
