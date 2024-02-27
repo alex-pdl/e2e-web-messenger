@@ -146,4 +146,5 @@ def message():
 
 if __name__ == "__main__":
     app.config['SECRET_KEY'] = f'{secret_key}' # Use secret key specified in settings.json file
+    app.config['SESSION_COOKIE_HTTPONLY'] = True # Ensures that the cookie is only accessible through HTTP(S) requests and cannot be accessed by JavaScript
     app.run(debug=False)
