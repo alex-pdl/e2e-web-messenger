@@ -139,11 +139,11 @@ def message():
             formatted_decrypted_message = ": " + RSA_Decrypt(encrypted_contents,string_to_tuple(session['private_key']))
             messages[index] += formatted_decrypted_message
         if len(messages) == 0:
-            messages = ["It appears you don't have any chats with this person, say hi!"]
+            messages = ["It appears you don't have any chats with this person. Say hi!"]
         return render_template('message.html',selected_user = selected_name,messages = messages)
     except:
         return redirect(url_for('chats'))
 
 if __name__ == "__main__":
     app.config['SECRET_KEY'] = f'{secret_key}' # Use secret key specified in settings.json file
-    app.run(debug=True)
+    app.run(debug=False)
