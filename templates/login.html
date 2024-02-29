@@ -15,11 +15,11 @@
         <form method="post" action='{{url_for('login')}}'>
             <div>
                 <label for="username">Username: </label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" minlength="4" maxlength="64" required>
             </div>
             <div>
                 <label for="password">Password: </label>
-                <input type="password" id="password" name="password" maxlength="256" required>
+                <input type="password" id="password" name="password" minlength="8" maxlength="256" required>
             </div>
             <input type="submit" value="Login">
         </form>    

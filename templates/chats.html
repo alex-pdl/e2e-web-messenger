@@ -20,7 +20,8 @@
         {% for name in names %}
             <li><a href="/message?selected_name={{ name }}"><button>{{ name }}</button></a></li>
         {% endfor %}
-    </ul>    
+    </ul>
+    <p>{{ message }}</p>
     <hr>
     <form method="post">
         <div>

@@ -134,7 +134,7 @@ def extended_gcd(a, b):
         return b, 0, 1
     else:
         # Keep recursing  'b' mod  'a' and 'a' to eventually reach the base case.
-        g, x, y = extended_gcd(b % a, a) 
+        g, x, y = extended_gcd(b % a, a)
         # When base case is reached, g will be the GCD
         # and y will contain the values that satisfy the equation g=ax+by
         # Then perform a simple calculation to find x and y
