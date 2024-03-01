@@ -92,12 +92,12 @@ def write_settings():
                 continue
         
         print("\nThe secret key is the encryption key of the cookies.\nIt must be larger than 12 characters and cannot include spaces.")
-        while len(secret_key) < 12 or " " in salt:
+        while len(secret_key) < 12 or " " in secret_key:
             try:
                 secret_key = input("Please enter a secret key: ")
                 if len(secret_key) < 12:
                     raise ValueError("It must be at least 12 characters long.")
-                if " " in secret_key:
+                elif " " in secret_key:
                     raise ValueError("You cannot include spaces.")
             except ValueError as e:
                 print(e)
@@ -115,23 +115,6 @@ def write_settings():
         # Writing user defined settings to JSON file
         with open("settings.json", "w") as json_file:
             json.dump(settings, json_file)
-        print("\nSettings configuration completed. The server will now start.")
-
-while True:
-    try: 
-        # Retrieving settings from .json file
-        with open('settings.json', 'r') as file:
-            data = json.load(file)
-
-        salt = data["salt"]
-        iterations = data["iterations"]
-        prime_number = data["primenumber"]
-        keysize = data["key_size"]
-        secret_key = data["secret_key"]
-        break
-    except (FileNotFoundError, NameError):
-        write_settings()
-        continue
 
 # Beginning of the website code
 app = Flask(__name__)
@@ -280,10 +263,29 @@ def message():
         return redirect(url_for('chats'))
 
 if __name__ == "__main__":
+    while True:
+        try:
+            # Retrieving settings from .json file
+            with open('settings.json', 'r') as file:
+                data = json.load(file)
+            print("\nSuccessfully detected settings.\n")
+
+            salt = data["salt"]
+            iterations = data["iterations"]
+            prime_number = data["primenumber"]
+            keysize = data["key_size"]
+            secret_key = data["secret_key"]
+            break
+        except (FileNotFoundError, NameError): # If the settings.json file doesn't exist
+            print("Settings.json not detected. \nGenerating Settings.\n")
+            
+            write_settings()
+            
+            print("\nSettings configuration completed. The server will now start.\n")
+        continue
+    
     create_database() # Initialise database upon running the program
-    try:
-        app.config['SECRET_KEY'] = f'{secret_key}' # Use secret key specified in settings.json file
-    except NameError: # If the json file hasn't been written yet.
-        print("You have not yet generated a settings file, we will now do that for you. \n")
-    app.config['SESSION_COOKIE_HTTPONLY'] = True # Ensures that cookies are only accessible through HTTP(S) requests and cannot be accessed by JavaScript
-    app.run(debug=True)
+    
+    app.config['SECRET_KEY'] = f'{secret_key}' # Use secret key specified in settings.json file
+    app.config['SESSION_COOKIE_HTTPONLY'] = True # Ensures that cookies are only accessible through HTTP(S) requests and cannot be accessed by any JavaScript
+    app.run()
