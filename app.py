@@ -1,11 +1,11 @@
 import json
 import sys
-from flask import Flask, url_for, render_template, redirect, request, flash, session
+from flask import Flask, url_for, render_template, redirect, request, session
 from db_interaction import *
 from algorithms import *
 
 
-# The program requires certain parameters to run, I have given the user the option to generate this paramters
+# The program requires certain parameters to run, I have given the user the option to generate these paramters
 # Upon first startup
 def write_settings():
     salt = ""
@@ -140,7 +140,6 @@ app = Flask(__name__)
 
 @app.route('/')
 def homepage():
-    create_database()
     if 'usr_id' not in session:
         return redirect(url_for('login'))
     else:
@@ -149,6 +148,7 @@ def homepage():
 # The login page
 @app.route('/login', methods = ['GET','POST'])
 def login():
+    total_users, total_chats, total_messages = statistics() # Gather general usage stats
     if 'usr_id' not in session: # Checks if user isn't already logged in
         if request.method == "POST":
             # Gets data submitted
@@ -166,43 +166,47 @@ def login():
                 return redirect(url_for('chats'))
             else:
                 error = "You have not entered in the correct information. Please try again."
-                return render_template("login.html",error=error)
+                return render_template("login.html",error=error,total_users=total_users,total_chats=total_chats,total_messages=total_messages)
         else:
-            return render_template("login.html")
+            return render_template("login.html",total_users=total_users,total_chats=total_chats,total_messages=total_messages)
     else:
         return redirect(url_for('chats'))
 
 @app.route('/registration', methods = ['GET','POST'])
 def registration():
-    create_database()
     # Submitting info (loggin in) uses POST, whereas loading the page uses GET
     if request.method == "POST":
         username = request.form.get('username')
-        # Makes sure username doesn't have special characters
-        if len(special_char_checker(username)) == 0:
-            password = request.form.get('password')
-            # Generates a public and private key for the user
-            public_key,private_key = key_gen(keysize)
-            # Encrypts the private key with the users password
-            private_key = sym_encryption(str(private_key),password,0,iterations)
-            # Hashes the password
-            hashed_pass = hash_password(request.form.get('password'),salt,iterations,prime_number)
-            user = user_db_interaction(username,hashed_pass,str(public_key),private_key)
-            # Makes sure password doesn't have any characters that cannot be represented as ASCII values
-            if len(ascii_checker(password)) == 0:
-                # If the register method returns false that means that the username is in use already
-                if user_db_interaction.register(user) != False:
-                    # Redirect to login page
-                    return redirect(url_for('login'))
+        password = request.form.get('password')
+        # Checks if username has any uppercase letters
+        if password != password.lower():
+            # Makes sure username doesn't have special characters
+            if len(special_char_checker(username)) == 0:
+                # Generates a public and private key for the user
+                public_key,private_key = key_gen(keysize)
+                # Encrypts the private key with the users password
+                private_key = sym_encryption(str(private_key),password,0,iterations)
+                # Hashes the password
+                hashed_pass = hash_password(request.form.get('password'),salt,iterations,prime_number)
+                user = user_db_interaction(username,hashed_pass,str(public_key),private_key)
+                # Makes sure password doesn't have any characters that cannot be represented as ASCII values
+                if len(ascii_checker(password)) == 0:
+                    # If the register method returns false that means that the username is in use already
+                    if user_db_interaction.register(user) != False:
+                        # Redirect to login page
+                        return redirect(url_for('login'))
+                    else:
+                        # Stay on the registration page and display the below error
+                        error = "Sorry, this username is currently in use."
+                    return render_template("registration.html",error=error)
                 else:
-                    # Stay on the registration page and display the below error
-                    error = "Sorry, this username is currently in use."
-                return render_template("registration.html",error=error)
+                    error = f"Sorry, you password cannot contain the following special characters: {ascii_checker(password)}"
+                    return render_template("registration.html",error=error)
             else:
-                error = f"Sorry, you password cannot contain the following special characters: {ascii_checker(password)}"
+                error = f"Sorry, you cannot have special characters such as: '{special_char_checker(username)}' in your username."
                 return render_template("registration.html",error=error)
         else:
-            error = f"Sorry, you cannot have special characters such as: '{special_char_checker(username)}' in your username."
+            error = "Please include at least one uppercase letter within your password."
             return render_template("registration.html",error=error)
     return render_template("registration.html")
 
@@ -230,8 +234,8 @@ def chats():
         if len(names) == 0:
             message = "You don't have any chatters yet! Enter a valid name below to start chatting!"
         return render_template("chats.html", user_name = str(session['username']),names = names,error=error,message = message)
-    except Exception as e:
-        print(e)
+    except:
+        # If the user tries to access chats page without logging in first
         return redirect(url_for('login'))
 
 @app.route('/message',methods = ['GET', 'POST'])
@@ -276,9 +280,10 @@ def message():
         return redirect(url_for('chats'))
 
 if __name__ == "__main__":
+    create_database() # Initialise database upon running the program
     try:
         app.config['SECRET_KEY'] = f'{secret_key}' # Use secret key specified in settings.json file
-    except NameError:
+    except NameError: # If the json file hasn't been written yet.
         print("You have not yet generated a settings file, we will now do that for you. \n")
-    app.config['SESSION_COOKIE_HTTPONLY'] = True # Ensures that the cookie is only accessible through HTTP(S) requests and cannot be accessed by JavaScript
-    app.run(debug=False)
+    app.config['SESSION_COOKIE_HTTPONLY'] = True # Ensures that cookies are only accessible through HTTP(S) requests and cannot be accessed by JavaScript
+    app.run(debug=True)
