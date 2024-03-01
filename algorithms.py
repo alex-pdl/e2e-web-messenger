@@ -140,30 +140,46 @@ def extended_gcd(a, b):
         # Then perform a simple calculation to find x and y
         return g, y - (b // a) * x, x
 
+# Calculate the modular inverse of 'a' and 'm'
 def modinv(a, m):
+    # Use the extended Euclidean algorithm to find the greatest common divisor 'g'
+    # the coefficients 'x' and 'y' such that a*x + m*y = g
     g, x, y = extended_gcd(a, m)
+    # If 'a' and 'm' are coprime, return the modular inverse of 'a' modulo 'm'
     return x % m
 
+# Generates RSA keys
 def key_gen(bits):
+    # Generate two large prime numbers with specified amount of bits
     p = generate_prime(bits//2)
     q = generate_prime(bits//2)
+    # Calculate the modulus
     n = p * q
+    # Euler's totient function
     phi_func = (p - 1) * (q - 1)
+    # Using a reccomended public exponent instead of generating one
     e = 65537
+    # Calculate the private exponent, this is the modular inverse of e and the result of the phi function
     d = modinv(e, phi_func)
+    # Returning the public key and private key (in that order)
     return (n, e), (n, d)
 
 def RSA_Encrypt(plaintext, public_key):
     n, e = public_key
     ciphertext = []
+     # Convert to ASCII number/Unicode and Encrypt each character in plaintext
     for char in plaintext:
+        # Raise the ASCII/unicode representation of 'char' to the power of the public exponent 'e' modulo 'n'
         ciphertext.append(pow(ord(char), e, n))
     return ciphertext
 
 def RSA_Decrypt(ciphertext,private_key):
     n, d = private_key
+    # Convert the cipher text from its string format to a list e.g. "[1234,4321]" to [1234,4321]
     ciphertext = string_to_list(ciphertext)
     plaintext = ""
+    # Decrypt each number in ciphertext and convert its ASCII number representation to alphabet
+    # Get the modular exponentiation of num using the private exponent and modulus
     for num in ciphertext:
         plaintext += chr(pow(num, d, n))
     return plaintext
