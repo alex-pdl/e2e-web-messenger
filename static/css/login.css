@@ -72,7 +72,7 @@ body{
 
 #submitBtn{
     margin-top: 30px;
-    margin-bottom: 100px;
+    margin-bottom: 90px;
     width: 210px;
     padding: 3px;
 
@@ -98,4 +98,14 @@ body{
     font-style: italic;
     font-size: 1em;
     padding: 10px;
+}
+
+#errorMsg{
+    position: relative;
+    left: -100px;
+    font-weight: 100;
+    font-style: italic;
+    margin-bottom: 20px;
+    
+    width: 400px;
 }
