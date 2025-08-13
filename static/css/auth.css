@@ -1,0 +1,109 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Helvetica, sans-serif;
+}
+
+body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+#container {
+    height: 660px;
+    width: 550px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 15px;
+    box-shadow: 0px 0px 50px rgba(0, 0, 0, 0.231);
+}
+form{
+    text-align: center;
+}
+
+#title{
+    font-size: 3.3em;
+    font-weight: 200;
+    margin-bottom: 80px;
+
+}
+#title:hover{
+    font-style: italic;
+}
+
+.inputBox{
+    width: 220px;
+    text-align: center;
+    margin: 0 auto;
+}
+
+.inputBox label{
+    font-weight: 300;
+    font-size: 1.3em;
+}
+
+.inputBox input{
+    border: 1px solid rgb(188, 188, 188);
+    width: 210px;
+    padding: 5px;
+
+    border-top: none;
+    border-left: none;
+    border-right: none;
+
+    font-weight: 200;
+    font-size: 1em;
+}
+
+.inputBox input:focus{
+    border-color: black;
+    outline: none;
+}
+
+#usernameBox{
+    padding-bottom: 30px;
+}
+
+#submitBtn{
+    margin-top: 30px;
+    margin-bottom: 90px;
+    width: 210px;
+    padding: 3px;
+
+    font-weight: 100;
+    font-size: 1.1em;
+
+    background-color: white;
+
+    border: 1px solid black;
+    border-radius: 5px;
+}
+
+#submitBtn:hover{
+    background-color: rgb(237, 237, 237);
+}
+
+#submitBtn:active{
+    background-color: rgb(193, 193, 193);
+}
+
+#container a{
+    font-weight: 100;
+    font-style: italic;
+    font-size: 1em;
+    padding: 10px;
+}
+
+#errorMsg{
+    font-weight: 100;
+    font-style: italic;
+    margin-bottom: 20px;
+    
+    width: 400px;
+}
