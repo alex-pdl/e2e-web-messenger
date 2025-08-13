@@ -1,0 +1,9 @@
+# Local config/database
+settings.json
+*.db
+*.sqlite
+
+.venv
+
+# Logs
+__pycache__
