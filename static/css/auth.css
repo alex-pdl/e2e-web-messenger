@@ -103,7 +103,22 @@ form{
 #errorMsg{
     font-weight: 100;
     font-style: italic;
-    margin-bottom: 20px;
     
+    margin: 0 auto;
     width: 400px;
+    height: 40px;
+
+    text-align: center;
+    vertical-align: middle;
+}
+
+#errorMsg p{
+    background-color: rgb(253, 51, 51);
+    color: white;
+
+    border-radius: 3px;
+    padding: 10px;
+}
+#errorMsg p:empty{
+    display: none;
 }
