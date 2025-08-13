@@ -4,34 +4,33 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css')}}">
     <title>Senderr</title>
 </head>
 <body>
     <div id="container">
-        <h1 id="title">Login</h1>
-        <form method="post" action='{{url_for('login')}}'>
-            <div id='inputContainer'>
-                <div class="inputBox" id="usernameBox">
-                    <label for="username">Username </label><br>
-                    <input type="text" id="username" name="username" minlength="4" maxlength="64" required>
-                </div>
+    <form method="post" action='{{url_for('login')}}'>
+        <div id="title">Login</div>
+        <div class="inputBox" id="usernameBox">
+            <label for="username">Username </label>
+            <input type="text" id="username" name="username" minlength="4" maxlength="64" required>
+        </div>
 
-                <div class="inputBox" id="passwordBox">
-                    <label for="password">Password </label><br>
-                    <input type="password" id="password" name="password" minlength="8" maxlength="256" required>
-                </div>
-                <input id="submitBtn" type="submit" value="Login">
-                <br>
+        <div class="inputBox" id="passwordBox">
+            <label for="password">Password </label>
+            <input type="password" id="password" name="password" minlength="8" maxlength="256" required>
+        </div>
 
-                <div id="errorMsg">
-                    {% if error%}
-                    <p>{{error}}</p>
-                    {% endif%}
-                </div>
-                <a href="/registration">Don't have an account?</a>
-            </div>
-        </form>
+        <input id="submitBtn" type="submit" value="Login">
+
+        <div id="errorMsg">
+            {% if error%}
+            <p>{{error}}</p>
+            {% endif%}
+        </div>
+
+        <a href="/registration">Don't have an account?</a>
+    </form>
     </div>
 </body>
 </html> 
