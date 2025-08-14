@@ -13,7 +13,7 @@
         <div id="title">Login</div>
         <div class="inputBox" id="usernameBox">
             <label for="username">Username </label>
-            <input type="text" id="username" name="username" minlength="4" maxlength="64" required>
+            <input type="text" id="username" name="username" minlength="4" maxlength="24" required>
         </div>
 
         <div class="inputBox" id="passwordBox">
@@ -27,7 +27,7 @@
             {% if error%}
             <p>{{error}}</p>
             {% endif%}
-        </div>
+        </div><br><br>
 
         <a href="/registration">Don't have an account?</a>
     </form>
