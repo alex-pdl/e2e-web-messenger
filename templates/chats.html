@@ -4,33 +4,40 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chats.css')}}">
     <title>Senderr</title>
 </head>
 <meta http-equiv="refresh" content="60" />
 <body>
-    <div>
-        <h1>
-            Welcome {{ user_name }}!
-        </h1>
+    <div id="title">Welcome {{ user_name }}</div>
+    <div id="logoutBtn">
         <form method="post">
             <button type="submit" name="logout" value="clicked">Logout</button>
         </form>
-    <hr>
-    <ul>
-        {% for name in names %}
-            <li><a href="/message?selected_name={{ name }}"><button>{{ name }}</button></a></li>
-        {% endfor %}
-    </ul>
-    <p>{{ message }}</p>
-    <hr>
-    <form method="post">
-        <div>
-            <label for="user_chat_name">User's name: </label>
-            <input type="text" id="user_chat_name" name="user_chat_name" maxlength="64" required>
+    </div>
+
+    <div id="chats">
+        <ul>
+            {% for name in names %}
+                <li><a href="/message?selected_name={{ name }}"><button>{{ name }}</button></a></li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <footer>
+        <div id="addUser">
+            <form method="post">
+                <label for="user_chat_name">User's name: </label><br>
+                <input id="addTextInput" type="text" id="user_chat_name" name="user_chat_name" maxlength="64" required>
+                <input id="addUserSubmitBtn" type="submit" value="Add user to chat">
+            </form>
         </div>
-        <input type="submit" value="Add user to chat">
-    </form>
-    {% if error%}
-    <p><strong>{{error}}</strong></p>
-    {% endif%}
+
+        <div id="errorMsg">
+            {% if error%}
+            <p>{{error}}</p>
+            {% endif%}
+        </div>
+    </footer>
+    <script src="{{ url_for('static', filename='js/chats.js')}}"></script>
 </body>
