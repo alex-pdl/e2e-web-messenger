@@ -1,0 +1,198 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Helvetica, sans-serif;
+}
+
+body{
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+}
+
+#title{
+    font-size: 3.5em;
+    font-weight: 300;
+
+    text-align: center;
+    margin-top: 10px;
+}
+
+#chats{
+    width: 400px;
+    height: 600px;
+    
+    text-align: center;
+    overflow-y: auto;
+
+    margin: 25px auto 25px auto;
+
+    border-radius: 15px;
+    border: 2px solid black;
+    box-shadow: 0px 0px 50px rgba(0, 0, 0, 0.231);
+}
+
+#chats > p:first-of-type{
+    padding-top: 20px;
+    font-weight: bold;
+    font-size: 2em;
+}
+
+#chats > p:nth-of-type(2){
+    font-weight: 300;
+    font-size: 1.3em;
+}
+
+#chats::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chats::-webkit-scrollbar-track {
+    margin: 8px;
+}
+
+#chats::-webkit-scrollbar-thumb {
+    background-color: #aeaeae;
+    border-radius: 15px;
+}
+
+#chats ul{
+    list-style-type: none;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#chats ul li a button{
+    font-size: 1.8em;
+    padding: 3px 30px 3px 30px;
+    margin: 10px auto 10px auto;
+    
+    text-align: center;
+    font-weight: 300;
+
+    background-color: rgb(34, 34, 34);
+    color: white;
+    border: none;
+    border-radius: 20px;
+
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.236);
+}
+
+#chats ul li a button:hover{
+    background-color: black;
+}
+
+#chats ul li a button:active{
+    background-color: rgb(76, 76, 76);
+}
+
+footer{
+    width: 100%;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#logoutBtn{
+    display: inline-block;
+}
+
+#addUser{
+    display: block;
+    width: 220px;
+    text-align: center;
+    margin: 0 auto;
+}
+
+#addUser form label{
+    font-weight: 300;
+    font-size: 1.3em;
+}
+
+#addTextInput{
+    border: 1px solid rgb(188, 188, 188);
+    width: 210px;
+    padding: 5px;
+
+    border-top: none;
+    border-left: none;
+    border-right: none;
+
+    font-weight: 200;
+    font-size: 1em;
+
+    margin-bottom: 10px;
+}
+
+#addTextInput:focus{
+    border-color: black;
+    outline: none;
+}
+
+#addUserSubmitBtn{
+    width: 210px;
+    padding: 3px;
+    margin-bottom: 10px;
+
+    font-weight: 100;
+    font-size: 1.1em;
+
+    background-color: white;
+
+    border: 1.5px solid black;
+    border-radius: 5px;
+}
+
+#addUserSubmitBtn:hover{
+    background-color: rgb(237, 237, 237);
+}
+
+#addUserSubmitBtn:active{
+    background-color: rgb(193, 193, 193);
+}
+
+#errorMsg p{
+    margin-top: 10px;
+
+    background-color: rgb(253, 51, 51);
+    color: white;
+    min-width: 400px;
+    max-width: 600px;
+
+    font-weight: 100;
+    font-style: italic;
+    text-align: center;
+
+    border-radius: 15px;
+    padding: 5px;
+}
+
+#errorMsg p:empty{
+    display: none;
+}
+
+#logoutBtn form button{
+    margin-top: 10px;
+    width: 100px;
+
+    padding: 3px;
+
+    font-weight: 100;
+    font-size: 1.1em;
+
+    background-color: white;
+
+    border: 1.5px solid black;
+    border-radius: 5px;
+}
+
+#logoutBtn form button:hover{
+    background-color: rgb(237, 237, 237);
+}
+
+#logoutBtn form button:active{
+    background-color: rgb(193, 193, 193);
+}

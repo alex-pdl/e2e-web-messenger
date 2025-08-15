@@ -212,11 +212,8 @@ def chats():
                 error = "You can't start a chat with yourself."
 
         names = chats_retrieval(session['username'])
-        message = ""
-        # If the user doesn't have any chats yet, the message below will be displayed.
-        if len(names) == 0:
-            message = "You don't have any chatters yet! Enter a valid name below to start chatting!"
-        return render_template("chats.html", user_name = str(session['username']),names = names,error=error,message = message)
+
+        return render_template("chats.html", user_name = str(session['username']),names = names,error=error)
     except:
         # If the user tries to access chats page without logging in first
         return redirect(url_for('login'))
@@ -288,4 +285,4 @@ if __name__ == "__main__":
     
     app.config['SECRET_KEY'] = f'{secret_key}' # Use secret key specified in settings.json file
     app.config['SESSION_COOKIE_HTTPONLY'] = True # Ensures that cookies are only accessible through HTTP(S) requests and cannot be accessed by any JavaScript
-    app.run()
+    app.run(debug=True)
