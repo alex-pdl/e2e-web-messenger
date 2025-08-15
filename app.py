@@ -1,120 +1,39 @@
 import json
-import sys
 from flask import Flask, url_for, render_template, redirect, request, session
-from db_interaction import *
-from algorithms import *
+from db_interaction import user_db_interaction, statistics, chats_retrieval, chat_creation, retrieve_public_key, retrieve_chatid, determine_column, create_message, retrieve_messages, create_database
+from crypto_algorithms import generate_prime, key_gen, hash_password, sym_encryption, sym_decryption, rsa_encrypt, rsa_decrypt
+
+from utils.input_utils import get_salt, get_iterations, get_key_size, get_secret_key, special_char_checker, ascii_checker, string_to_tuple
 
 
 # The program requires certain parameters to run, I have given the user the option to generate these paramters
 # Upon first startup
 def write_settings():
-    salt = ""
-    iterations = 0
-    prime_number = None
-    keysize = 0
-    secret_key = ""
+    salt = get_salt()
+    iterations = get_iterations()
+    prime_number = generate_prime(5)
+    key_size = get_key_size()
+    secret_key = get_secret_key()
 
-    key_sizes = [256,512,1024,2048,4096]
+
+    print(
+        f"Here is your configuration:\n"
+        f"Salt: {salt}\n"
+        f"Iterations: {iterations}\n"
+        f"Prime Number: {prime_number}\n"
+        f"Key Size: {key_size}\n"
+        f"Secret Key: {secret_key}"
+    )
     
-    try:
-        #Get password salt from the user.
-        print("The password salt must be larger than 12 characters and cannot include spaces.")
-        while len(salt) < 12 or " " in salt:
-            try:
-                salt = input("Please enter a salt for password hashing: ")
-                if len(salt) < 12:
-                    raise ValueError("Salt must be at least 12 characters long.")
-                elif " " in salt:
-                    raise ValueError("You cannot include spaces in your salt")
-            except ValueError as e:
-                print(f"\nError: {e}")
-        
-        #Get amount of iterations from the user
-        print("\nEnter number of iterations for the symmetric encryption and hashing to go through. \n" + 
-            "Note: With increasing number of iterations, security increases at the cost of speed.")
+    settings = {"salt": salt,
+                "iterations": iterations,
+                "primenumber": prime_number,
+                "key_size": key_size,
+                "secret_key": secret_key}
 
-        while iterations < 3 or iterations > 50:
-            try:
-                iterations = input("Enter number of iterations: ")
-                try:
-                    iterations = int(iterations)
-                except:
-                    raise ValueError("You have not entered in an integer.")
-                if iterations < 3 or iterations > 50:
-                    raise ValueError("Must be between 3 and 50.")
-            except ValueError as e:
-                print(f"\nError: {e}")
-                iterations = 0 # Restart to original value
-                continue  # Restart if exception occurs
-        print("Prime numbers are used by the hashing algorithm to produce hashes.")
-        while True: 
-            prime_choice = input("Would you like the program to generate a prime number ? (if not, you have to pick one) \n(y/n):")
-            if prime_choice == "y" or prime_choice == "n":
-                break
-        if prime_choice == "y":
-            # The prime number variable was initially set to none
-            # Generating a prime number between 3 and 50
-            while prime_number is None:
-                random_number = random.randint(3, 50)
-                if is_prime(random_number):
-                    prime_number = random_number
-        elif prime_choice == "n":
-            # Get prime number from the user
-            while prime_number is None:
-                try:
-                    prime_number = input("Please enter a prime number between 3 and 40: ")
-                    # Make sure it is an integer
-                    try:
-                        prime_number = int(prime_number)
-                    except:
-                        raise ValueError("Please enter an integer.")
-                    # Check if between 3 and 40
-                    if prime_number < 3 or prime_number > 40:
-                        raise ValueError("This must be between 3 and 40.")
-                    # Check if prime
-                    elif not is_prime(prime_number): # The is_prime() function returns the boolean TRUE if input is prime
-                        raise ValueError("The number you have entered is not prime.")
-                except ValueError as e:
-                    print(f"\nError: {e} \n")
-                    prime_number = None
-                    continue  # Restart if exception occurs
-
-        while True:
-            key_size = input(f"\nChoose a key size for private public key encryption: {key_sizes}.\nKey Sizes above 2048 can slow down the program tremendously. \n 512 or 1024 is recommended.\nKey size: ")
-            try:
-                key_size = int(key_size)
-                if key_size not in key_sizes:
-                    raise ValueError
-                else:
-                    break
-            except ValueError:
-                print("\nPlease input an integer that is within the list.\n")
-                continue
-        
-        print("\nThe secret key is the encryption key of the cookies.\nIt must be larger than 12 characters and cannot include spaces.")
-        while len(secret_key) < 12 or " " in secret_key:
-            try:
-                secret_key = input("Please enter a secret key: ")
-                if len(secret_key) < 12:
-                    raise ValueError("It must be at least 12 characters long.")
-                elif " " in secret_key:
-                    raise ValueError("You cannot include spaces.")
-            except ValueError as e:
-                print(e)
-
-    finally:
-        print(f"Here is your configuration:\nSalt: {salt} \nIterations: {iterations} \nPrime Number: {prime_number} \nKey Size: {keysize} \nSecret Key: {secret_key}")
-        settings = {
-        "salt": salt,
-        "iterations": iterations,
-        "primenumber": prime_number,
-        "key_size": key_size,
-        "secret_key": secret_key
-        }
-
-        # Writing user defined settings to JSON file
-        with open("settings.json", "w") as json_file:
-            json.dump(settings, json_file)
+    # Writing user defined settings to JSON file
+    with open("settings.json", "w") as json_file:
+        json.dump(settings, json_file)
 
 # Beginning of the website code
 app = Flask(__name__)
@@ -227,8 +146,8 @@ def message():
         else:
             message = request.form.get('message')
             # Create two versions of the message, 1 encrypted using the senders info, and the other using the recievers info
-            receivers_message = RSA_Encrypt(message,string_to_tuple(retrieve_public_key(selected_name)))
-            senders_message = RSA_Encrypt(message,string_to_tuple(retrieve_public_key(session['username'])))
+            receivers_message = rsa_encrypt(message,string_to_tuple(retrieve_public_key(selected_name)))
+            senders_message = rsa_encrypt(message,string_to_tuple(retrieve_public_key(session['username'])))
             # Determine which column (contents_1 or contents_2) the sender is a part of
             chatid = retrieve_chatid(session["username"],selected_name)
             which_contents = determine_column(session["username"],chatid)
@@ -251,7 +170,7 @@ def message():
             messages.append(str(formatted_info))
             # Format the message contents and decrypt
             # Then add to messages list
-            formatted_decrypted_message = ": " + RSA_Decrypt(encrypted_contents,string_to_tuple(session['private_key']))
+            formatted_decrypted_message = ": " + rsa_decrypt(encrypted_contents,string_to_tuple(session['private_key']))
             messages[index] += formatted_decrypted_message
         if len(messages) == 0:
             messages = ["It appears you don't have any chats with this person. Say hi!"]
@@ -279,7 +198,6 @@ if __name__ == "__main__":
             write_settings()
             
             print("\nSettings configuration completed. The server will now start.\n")
-        continue
     
     create_database() # Initialise database upon running the program
     
