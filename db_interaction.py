@@ -170,30 +170,6 @@ def determine_column(username,chatid):
     else:
         return "contents_2"
 
-#function which checks if string has any special characters and if so, returns them
-def special_char_checker(string):
-    special_characters = []
-    #users can only make usernames consisting of these characters.
-    allowed_characters =  ["a","b","c","d","e","f"
-                           ,"g","h","i","j","k","l"
-                           ,"m","n","o","p","q","r"
-                           ,"s","t","u","v","w","x"
-                           ,"y","z","0","1","2","3",
-                           "4","5","6","7","8","9","10"]
-    for i in string:
-        if i.lower() not in allowed_characters and i.lower() not in special_characters:
-            special_characters.append(i)
-    return special_characters
-
-def ascii_checker(string): 
-    #returns a list of all characters in a string which cannot be represented as an ascii character
-    #this is needed to ensure the hashing and encryption algorithms work properly
-    list_of_special_chars = []
-    for char in string:
-        if ord(char) > 128 and char not in list_of_special_chars:
-            list_of_special_chars.append(char)
-    return list_of_special_chars
-
 def create_database():
     #creates database with all tables if it doesn't already exist
     connection = sqlite3.connect('users.db')

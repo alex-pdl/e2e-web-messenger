@@ -1,39 +1,4 @@
-import random
-import math
-import sympy
-
-def convert_to_ascii(text,salt):
-    ascii_version = []
-    value = text + salt
-    # turns value in ascii list
-    for character in value:
-        ascii_version.append(ord(character))
-    return ascii_version
-
-def convert_to_hex(ascii_values):
-    hex_values = []
-    for value in ascii_values:
-        hex_version = hex(value)
-        hex_values.append(hex_version[2:])
-    return hex_values
-
-# Converts a string e.g. "[3123,4324,1233]" to a list [3123,4324,1233]
-def string_to_list(input_string):
-    # Remove brackets and split the string by commas
-    elements = input_string[1:-1].split(',')
-    result_list = []
-    for element in elements:
-        result_list.append(int(element))
-    return result_list
-
-def string_to_tuple(input_str):
-    # Remove leading and trailing whitespace, and parentheses
-    cleaned_str = input_str.strip("()")
-    # Split the cleaned string into individual elements
-    elements = cleaned_str.split(',')
-    # Convert elements to integers and create a tuple
-    result_tuple = tuple(map(int, elements))
-    return result_tuple
+from utils.crypto_utils import convert_to_ascii, convert_to_hex, string_to_list, generate_prime, modinv
 
 def hash(ascii_values, iteration, iterations, prime_number):
     if iteration < iterations:
@@ -108,46 +73,6 @@ def sym_decryption(cipher, key, iteration, iterations):
         cipher = sym_decryption(new_cipher, key, iteration + 1, iterations)
     return cipher
 
-# Deterministic prime number checker
-def is_prime(number):
-    # Gets every number between 2 and the square of the number + 1
-    for i in range(2, int(number**0.5)+1):
-    # Checks if the number is divisible by any of those numbers
-        if number % i == 0:
-            return False
-    # If not, the number is prime
-    return True
-
-def generate_prime(bits, type="default"):
-    while True:
-        num = random.getrandbits(bits)
-        if type == "default":
-            if sympy.isprime(num):
-                return num
-        if type == "custom":        
-            if is_prime(num):
-                return num
-
-# Finds the greatest common divisor between two numbers 
-def extended_gcd(a, b):
-    if a == 0: # The base case
-        return b, 0, 1
-    else:
-        # Keep recursing  'b' mod  'a' and 'a' to eventually reach the base case.
-        g, x, y = extended_gcd(b % a, a)
-        # When base case is reached, g will be the GCD
-        # and y will contain the values that satisfy the equation g=ax+by
-        # Then perform a simple calculation to find x and y
-        return g, y - (b // a) * x, x
-
-# Calculate the modular inverse of 'a' and 'm'
-def modinv(a, m):
-    # Use the extended Euclidean algorithm to find the greatest common divisor 'g'
-    # the coefficients 'x' and 'y' such that a*x + m*y = g
-    g, x, y = extended_gcd(a, m)
-    # If 'a' and 'm' are coprime, return the modular inverse of 'a' modulo 'm'
-    return x % m
-
 # Generates RSA keys
 def key_gen(bits):
     # Generate two large prime numbers with specified amount of bits
@@ -164,7 +89,7 @@ def key_gen(bits):
     # Returning the public key and private key (in that order)
     return (n, e), (n, d)
 
-def RSA_Encrypt(plaintext, public_key):
+def rsa_encrypt(plaintext, public_key):
     n, e = public_key
     ciphertext = []
      # Convert to ASCII number/Unicode and Encrypt each character in plaintext
@@ -173,7 +98,7 @@ def RSA_Encrypt(plaintext, public_key):
         ciphertext.append(pow(ord(char), e, n))
     return ciphertext
 
-def RSA_Decrypt(ciphertext,private_key):
+def rsa_decrypt(ciphertext,private_key):
     n, d = private_key
     # Convert the cipher text from its string format to a list e.g. "[1234,4321]" to [1234,4321]
     ciphertext = string_to_list(ciphertext)
