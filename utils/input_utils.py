@@ -98,7 +98,8 @@ def special_char_checker(string):
                            ,"m","n","o","p","q","r"
                            ,"s","t","u","v","w","x"
                            ,"y","z","0","1","2","3",
-                           "4","5","6","7","8","9","10"]
+                           "4","5","6","7","8","9",
+                           "10","@","-","_"]
     for i in string:
         if i.lower() not in allowed_characters and i.lower() not in special_characters:
             special_characters.append(i)
