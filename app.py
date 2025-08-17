@@ -1,6 +1,6 @@
 import json
 from flask import Flask, url_for, render_template, redirect, request, session
-from db_interaction import user_db_interaction, statistics, chats_retrieval, chat_creation, retrieve_public_key, retrieve_chatid, determine_column, create_message, retrieve_messages, create_database
+from db_interaction import user_db_interaction, chats_retrieval, chat_creation, retrieve_public_key, retrieve_chatid, determine_column, create_message, retrieve_messages, create_database, username_check
 from crypto_algorithms import generate_prime, key_gen, hash_password, sym_encryption, sym_decryption, rsa_encrypt, rsa_decrypt
 
 from utils.input_utils import get_salt, get_iterations, get_key_size, get_secret_key, special_char_checker, ascii_checker, string_to_tuple
@@ -35,10 +35,40 @@ def write_settings():
     with open("settings.json", "w") as json_file:
         json.dump(settings, json_file)
 
+def is_login_valid(username, password):
+    # Hashes password submitted
+    hashed_pass = hash_password(password,salt,iterations,prime_number)
+    user = user_db_interaction(username,hashed_pass)
+    
+    if user_db_interaction.password_check(user) == True:
+        return user
+    else:
+        return False
+    
+def is_register_valid(username, password):
+    if password == password.lower():
+        raise ValueError\
+            ("Password must include at least one uppercase letter.")
+
+    special_chars = special_char_checker(username)
+    if len(special_chars) != 0:
+        raise ValueError\
+        (f"Username cannot include special characters such as: {special_chars}")
+
+    ascii_chars = ascii_checker(password)
+    if len(ascii_chars) != 0:
+        raise ValueError\
+            (f"Password contains invalid characters: {ascii_chars}")
+
+    if username_check(username):
+        raise ValueError("Username is already taken.")
+
+
 # Beginning of the website code
 app = Flask(__name__)
 # A standard homepage which redirects to the login page
-# If a user already has session data stored in cookies, they will automatically be redirected to the chats page
+# If a user already has session data stored in cookies, 
+# they will automatically be redirected to the chats page
 
 @app.route('/')
 def homepage():
@@ -50,29 +80,27 @@ def homepage():
 # The login page
 @app.route('/login', methods = ['GET','POST'])
 def login():
-    total_users, total_chats, total_messages = statistics() # Gather general usage stats
-    if 'usr_id' not in session: # Checks if user isn't already logged in
-        if request.method == "POST":
-            # Gets data submitted
-            username = request.form.get('username')
-            password = request.form.get('password')
-            # Hashes password submitted
-            hashed_pass = hash_password(password,salt,iterations,prime_number)
-            global user
-            user = user_db_interaction(username,hashed_pass)
-            # If user entered in correct info store the username, user id and private key in cookies
-            if user_db_interaction.password_check(user) == True:
-                session['username'] = username
-                session['usr_id'] = user_db_interaction.retrieve_user_id(user)
-                session['private_key'] = sym_decryption(user_db_interaction.retrieve_privatekey(user),password,0,iterations)
-                return redirect(url_for('chats'))
-            else:
-                error = "You have not entered in the correct information. Please try again."
-                return render_template("login.html",error=error,total_users=total_users,total_chats=total_chats,total_messages=total_messages)
-        else:
-            return render_template("login.html",total_users=total_users,total_chats=total_chats,total_messages=total_messages)
-    else:
+    if 'usr_id' in session: # Checks if user isn't already logged in
         return redirect(url_for('chats'))
+    
+    if request.method == "POST":
+        # Gets data submitted
+        username = request.form.get('username')
+        password = request.form.get('password')
+
+        if not is_login_valid(username,password):
+            error = "You have not entered in the correct information. Please try again."
+            return render_template("login.html",error=error)
+    
+        user = is_login_valid(username, password)
+
+        # If user entered in correct info store the username, user id and private key in cookies
+        session['username'] = username
+        session['usr_id'] = user_db_interaction.retrieve_user_id(user)
+        session['private_key'] = sym_decryption(user_db_interaction.retrieve_privatekey(user),password,0,iterations)
+        return redirect(url_for('chats'))
+    
+    return render_template("login.html")
 
 @app.route('/registration', methods = ['GET','POST'])
 def registration():
@@ -80,36 +108,25 @@ def registration():
     if request.method == "POST":
         username = request.form.get('username')
         password = request.form.get('password')
-        # Checks if username has any uppercase letters
-        if password != password.lower():
-            # Makes sure username doesn't have special characters
-            if len(special_char_checker(username)) == 0:
-                # Generates a public and private key for the user
-                public_key,private_key = key_gen(keysize)
-                # Encrypts the private key with the users password
-                private_key = sym_encryption(str(private_key),password,0,iterations)
-                # Hashes the password
-                hashed_pass = hash_password(request.form.get('password'),salt,iterations,prime_number)
-                user = user_db_interaction(username,hashed_pass,str(public_key),private_key)
-                # Makes sure password doesn't have any characters that cannot be represented as ASCII values
-                if len(ascii_checker(password)) == 0:
-                    # If the register method returns false that means that the username is in use already
-                    if user_db_interaction.register(user) != False:
-                        # Redirect to login page
-                        return redirect(url_for('login'))
-                    else:
-                        # Stay on the registration page and display the below error
-                        error = "Sorry, this username is currently in use."
-                    return render_template("registration.html",error=error)
-                else:
-                    error = f"Sorry, you password cannot contain the following special characters: {ascii_checker(password)}"
-                    return render_template("registration.html",error=error)
-            else:
-                error = f"Sorry, you cannot have special characters such as: '{special_char_checker(username)}' in your username."
-                return render_template("registration.html",error=error)
-        else:
-            error = "Please include at least one uppercase letter within your password."
-            return render_template("registration.html",error=error)
+        
+        try:
+            is_register_valid(username, password)
+        except ValueError as e:
+            return render_template("registration.html", error = e)
+        
+
+        # Generates a public and private key for the user
+        public_key, private_key = key_gen(keysize)
+        # Encrypts the private key with the users password
+        private_key = sym_encryption(str(private_key), password, 0, iterations)
+        # Hashes the password
+        hashed_pass = hash_password(password,salt,iterations,prime_number)
+        user = user_db_interaction(username, hashed_pass, str(public_key), private_key)
+        
+        user_db_interaction.register(user)
+
+        return redirect(url_for('login'))
+
     return render_template("registration.html")
 
 @app.route('/chats', methods = ['GET','POST'])

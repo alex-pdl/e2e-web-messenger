@@ -9,21 +9,17 @@ class user_db_interaction:
         self.private_key = private_key
 
     def register(self):        
-        #if username is not in use
-        if self.username_check() == False:
-            connection = sqlite3.connect('users.db')
-            cursor = connection.cursor()
+        connection = sqlite3.connect('users.db')
+        cursor = connection.cursor()
 
-            #inserting username & password hash into the database
-            info = [
-                    (self.username, self.password,self.public_key,self.private_key)
-            ]
-            cursor.executemany("INSERT INTO users (username,password,public_key,private_key) VALUES (?,?,?,?)", info)
-            #committing changes & closing the connection
-            connection.commit()
-            connection.close()
-        else:
-            return False
+        #inserting username & password hash into the database
+        info = [
+                (self.username, self.password,self.public_key,self.private_key)
+        ]
+        cursor.executemany("INSERT INTO users (username,password,public_key,private_key) VALUES (?,?,?,?)", info)
+        #committing changes & closing the connection
+        connection.commit()
+        connection.close()
 
     def password_check(self):
         connection = sqlite3.connect('users.db')  
@@ -38,19 +34,6 @@ class user_db_interaction:
             return True
         else:
             return False
-        
-    #checks if the username is not in use
-    def username_check(self):
-        connection = sqlite3.connect('users.db')
-        cursor = connection.cursor()
-        cursor.execute("SELECT username FROM users WHERE username = (?)", (self.username,))
-        fetched_username = str(cursor.fetchall()).strip("[(', )]")
-        if self.username == fetched_username:
-            return True
-        else:
-            return False
-        connection.commit()
-        connection.close()
 
     def retrieve_user_id(self):
         connection = sqlite3.connect('users.db')
@@ -69,6 +52,17 @@ class user_db_interaction:
         encrypted_private_key = result[0]
         connection.close()
         return encrypted_private_key
+    
+#checks if the username is not in use
+def username_check(username):
+    connection = sqlite3.connect('users.db')
+    cursor = connection.cursor()
+    cursor.execute("SELECT username FROM users WHERE username = (?)", (username,))
+    fetched_username = str(cursor.fetchall()).strip("[(', )]")
+    if username == fetched_username:
+        return True
+    else:
+        return False
     
 def chat_creation(user_1, user_2):
     connection = sqlite3.connect('users.db')
