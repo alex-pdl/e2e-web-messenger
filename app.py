@@ -1,6 +1,6 @@
 import json
 from flask import Flask, url_for, render_template, redirect, request, session
-from utils.database_utils import register, retrieve_user_id, retrieve_privatekey, chats_retrieval, chat_creation, retrieve_public_key, retrieve_chatid, determine_column, create_message, retrieve_messages, create_database, username_check, password_check
+from db_interaction import user_db_interaction, chats_retrieval, chat_creation, retrieve_public_key, retrieve_chatid, determine_column, create_message, retrieve_messages, create_database, username_check
 from crypto_algorithms import generate_prime, key_gen, hash_password, sym_encryption, sym_decryption, rsa_encrypt, rsa_decrypt
 
 from utils.input_utils import get_salt, get_iterations, get_key_size, get_secret_key, special_char_checker, ascii_checker, string_to_tuple
@@ -37,9 +37,13 @@ def write_settings():
 
 def is_login_valid(username, password):
     # Hashes password submitted
-    password_hash = hash_password(password,salt,iterations,prime_number)
+    hashed_pass = hash_password(password,salt,iterations,prime_number)
+    user = user_db_interaction(username,hashed_pass)
     
-    return password_check(username, password_hash)
+    if user_db_interaction.password_check(user) == True:
+        return user
+    else:
+        return False
     
 def is_register_valid(username, password):
     if password == password.lower():
@@ -58,25 +62,13 @@ def is_register_valid(username, password):
 
     if username_check(username):
         raise ValueError("Username is already taken.")
-    
-def create_user(username, password):
-    # Generates a public and private key for the user
-    public_key, private_key = key_gen(keysize)
-    # Encrypts the private key with the users password
-    private_key = sym_encryption(str(private_key), password, 0, iterations)
-    # Hashes the password
-    password_hash = hash_password(password,salt,iterations,prime_number)
-    
-    register(username, password_hash, str(public_key), private_key)
 
-def create_session(username, password):
-    session['username'] = username
-    session['usr_id'] = retrieve_user_id(username)
-    session['private_key'] = sym_decryption(retrieve_privatekey(username),password,0,iterations)
 
 # Beginning of the website code
 app = Flask(__name__)
 # A standard homepage which redirects to the login page
+# If a user already has session data stored in cookies, 
+# they will automatically be redirected to the chats page
 # If a user already has session data stored in cookies, 
 # they will automatically be redirected to the chats page
 
@@ -101,11 +93,16 @@ def login():
         if not is_login_valid(username,password):
             error = "You have not entered in the correct information. Please try again."
             return render_template("login.html",error=error)
-
-        create_session(username, password)
+    
+        user = is_login_valid(username, password)
 
         # If user entered in correct info store the username, user id and private key in cookies
+        session['username'] = username
+        session['usr_id'] = user_db_interaction.retrieve_user_id(user)
+        session['private_key'] = sym_decryption(user_db_interaction.retrieve_privatekey(user),password,0,iterations)
         return redirect(url_for('chats'))
+    
+    return render_template("login.html")
     
     return render_template("login.html")
 
@@ -121,12 +118,18 @@ def registration():
         except ValueError as e:
             return render_template("registration.html", error = e)
         
-        create_user(username, password)
 
-        create_session(username, password)
+        # Generates a public and private key for the user
+        public_key, private_key = key_gen(keysize)
+        # Encrypts the private key with the users password
+        private_key = sym_encryption(str(private_key), password, 0, iterations)
+        # Hashes the password
+        hashed_pass = hash_password(password,salt,iterations,prime_number)
+        user = user_db_interaction(username, hashed_pass, str(public_key), private_key)
+        
+        user_db_interaction.register(user)
 
-        # Successfull registration message will be passed in place of error box
-        return render_template("registration.html", error="Success")
+        return redirect(url_for('login'))
 
     return render_template("registration.html")
 

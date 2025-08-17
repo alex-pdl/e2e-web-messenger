@@ -4,8 +4,26 @@ import datetime
 database = "users.db"
 filler = "[(', )]"
 
+<<<<<<< HEAD:utils/database_utils.py
 def register(username, password_hash, public_key, private_key):        
         connection = sqlite3.connect(database)
+=======
+    def register(self):        
+        connection = sqlite3.connect('users.db')
+        cursor = connection.cursor()
+
+        #inserting username & password hash into the database
+        info = [
+                (self.username, self.password,self.public_key,self.private_key)
+        ]
+        cursor.executemany("INSERT INTO users (username,password,public_key,private_key) VALUES (?,?,?,?)", info)
+        #committing changes & closing the connection
+        connection.commit()
+        connection.close()
+
+    def password_check(self):
+        connection = sqlite3.connect('users.db')  
+>>>>>>> 7e3e27c (Refactored codebase to improve code readability):db_interaction.py
         cursor = connection.cursor()
 
         #inserting username & password hash into the database
@@ -51,10 +69,17 @@ def retrieve_privatekey(username):
     
 #checks if the username is not in use
 def username_check(username):
+<<<<<<< HEAD:utils/database_utils.py
     connection = sqlite3.connect(database)
     cursor = connection.cursor()
     cursor.execute("SELECT username FROM users WHERE username = (?)", (username,))
     fetched_username = str(cursor.fetchall()).strip(filler)
+=======
+    connection = sqlite3.connect('users.db')
+    cursor = connection.cursor()
+    cursor.execute("SELECT username FROM users WHERE username = (?)", (username,))
+    fetched_username = str(cursor.fetchall()).strip("[(', )]")
+>>>>>>> 7e3e27c (Refactored codebase to improve code readability):db_interaction.py
     if username == fetched_username:
         return True
     else:
