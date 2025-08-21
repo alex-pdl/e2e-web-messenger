@@ -65,22 +65,23 @@ def chat_creation(user_1, user_2):
     cursor = connection.cursor()
     #checks if user tried to chat with themselves
     if user_1 == user_2:
-        return("Error_3")
+        raise ValueError("You can't start a chat with yourself.")
     
     #checks if user 2 exists
     if not username_check(user_2):
-        return("Error_2")
+        raise ValueError("This user doesn't seem to exist. \
+                         Maybe you misspelt their username?")
 
     if retrieve_chatid(user_1, user_2) != "None":  
         #Checks if user already has chat with this person
-        return("Error_1")
+        raise ValueError("You already have a chat with this person, you can't create another one.")
         
     #adds the user and the person they choose to chat with to the 'chats' database
     values = [user_1, user_2]
     cursor.execute("INSERT INTO chats (username_1,username_2) VALUES(?,?)", (values))
     connection.commit()
     connection.close()
-    return "Success"
+    return True
         
 
 def chats_retrieval(username):

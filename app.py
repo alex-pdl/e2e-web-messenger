@@ -143,13 +143,10 @@ def chats():
         return redirect(url_for('login'))
     if request.method == "POST":
         user2 = request.form.get('user_chat_name')
-        result = chat_creation(session['username'], user2)
-        if result == "Error_1":
-            error = "You already have a chat with this person, you can't create another one."
-        elif result == "Error_2":
-            error = "This user doesn't seem to exist. Maybe you misspelt their username?"
-        elif result == "Error_3":
-            error = "You can't start a chat with yourself."
+        try:
+            result = chat_creation(session['username'], user2)
+        except ValueError as e:
+            error = e
 
     names = chats_retrieval(session['username'])
 
@@ -174,16 +171,16 @@ def message():
         else:
             message = request.form.get('message')
             # Create two versions of the message, 1 encrypted using the senders info, and the other using the recievers info
-            receivers_message = rsa_encrypt(message,string_to_tuple(retrieve_public_key(selected_name)))
-            senders_message = rsa_encrypt(message,string_to_tuple(retrieve_public_key(session['username'])))
+            receivers_message = str(rsa_encrypt(message,string_to_tuple(retrieve_public_key(selected_name))))
+            senders_message = str(rsa_encrypt(message,string_to_tuple(retrieve_public_key(username))))
             # Determine which column (contents_1 or contents_2) the sender is a part of
             
             which_contents = determine_column(session["username"],chatid)
 
             if which_contents == "contents_1":
-                create_message(username, chatid,str(senders_message),str(receivers_message))
+                create_message(username, chatid, senders_message, receivers_message)
             elif which_contents == "contents_2":
-                create_message(username, chatid ,str(receivers_message),str(senders_message))
+                create_message(username, chatid, receivers_message, senders_message)
     
     which_contents = determine_column(session["username"],chatid)
     msg_info, encrypted_message_contents = retrieve_messages(retrieve_chatid(username, selected_name), which_contents)
