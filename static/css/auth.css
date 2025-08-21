@@ -147,11 +147,17 @@ form{
 #returnBtn:active{
     background-color: rgb(240, 240, 240);
     box-shadow: none;
-    padding: 3px;
 }
 #returnBtn:active .material-symbols-outlined{
     color: black;
 }
 .material-symbols-outlined{
     color: white;
+}
+
+@media only screen and (max-width: 600px) {
+    #container {width: 350px; height: 600px;}
+    #errorMsg{width: 300px;}
+    #title{font-size: 3em;}
+    #returnBtn{bottom: 0px}
 }
