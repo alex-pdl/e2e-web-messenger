@@ -144,7 +144,7 @@ def chats():
     if request.method == "POST":
         user2 = request.form.get('user_chat_name')
         try:
-            result = chat_creation(session['username'], user2)
+            chat_creation(session['username'], user2)
         except ValueError as e:
             error = e
 
@@ -202,7 +202,7 @@ def message():
     if len(messages) == 0:
         messages = ["It appears you don't have any chats with this person. Say hi!"]
     
-    return render_template('message.html',selected_user = selected_name,messages = messages)
+    return render_template('message.html', selected_user = selected_name, messages = messages)
 
 if __name__ == "__main__":
     while True:
