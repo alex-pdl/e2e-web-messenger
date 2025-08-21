@@ -192,26 +192,3 @@ def create_database():
     cursor.execute(create_message_table)
     connection.commit()
     connection.close()
-
-def statistics(): # Gathers general usage statistics and returns them.
-    connection = sqlite3.connect(database)
-    cursor = connection.cursor()
-    # Enclose sub queries in brackets to distinguish between them and the main query
-    gather_statistics = """
-        SELECT 
-            (SELECT COUNT(*) FROM users) AS total_users,
-            (SELECT MAX(chatid) FROM chats) AS max_chat_id,
-            COUNT(*) AS total_messages
-        FROM 
-            message;
-    """
-    cursor.execute(gather_statistics)
-    result = cursor.fetchone()
-    connection.commit()
-    connection.close()
-    
-    total_users, total_chats, total_messages = result
-    if total_chats is None:
-        total_chats = 0
-# Returns total users, the amount of chats and the total amount of messages in that order
-    return total_users,total_chats,total_messages 
