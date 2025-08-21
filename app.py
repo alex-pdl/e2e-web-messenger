@@ -1,6 +1,6 @@
 import json
 from flask import Flask, url_for, render_template, redirect, request, session
-from db_interaction import user_db_interaction, chats_retrieval, chat_creation, retrieve_public_key, retrieve_chatid, determine_column, create_message, retrieve_messages, create_database, username_check
+from utils.database_utils import chats_retrieval, chat_creation, password_check, register, retrieve_privatekey, retrieve_public_key, retrieve_chatid, determine_column, create_message, retrieve_messages, create_database, retrieve_user_id, username_check
 from crypto_algorithms import generate_prime, key_gen, hash_password, sym_encryption, sym_decryption, rsa_encrypt, rsa_decrypt
 
 from utils.input_utils import get_salt, get_iterations, get_key_size, get_secret_key, special_char_checker, ascii_checker, string_to_tuple
@@ -37,13 +37,9 @@ def write_settings():
 
 def is_login_valid(username, password):
     # Hashes password submitted
-    hashed_pass = hash_password(password,salt,iterations,prime_number)
-    user = user_db_interaction(username,hashed_pass)
+    password_hash = hash_password(password,salt,iterations,prime_number)
     
-    if user_db_interaction.password_check(user) == True:
-        return user
-    else:
-        return False
+    return password_check(username, password_hash)
     
 def is_register_valid(username, password):
     if password == password.lower():
@@ -69,17 +65,14 @@ def create_user(username, password):
     # Encrypts the private key with the users password
     private_key = sym_encryption(str(private_key), password, 0, iterations)
     # Hashes the password
-    hashed_pass = hash_password(password,salt,iterations,prime_number)
-    user = user_db_interaction(username, hashed_pass, str(public_key), private_key)
+    password_hash = hash_password(password,salt,iterations,prime_number)
     
-    user_db_interaction.register(user)
+    register(username, password_hash, str(public_key), private_key)
 
-    return user
-
-def create_session(user, username, password):
+def create_session(username, password):
     session['username'] = username
-    session['usr_id'] = user_db_interaction.retrieve_user_id(user)
-    session['private_key'] = sym_decryption(user_db_interaction.retrieve_privatekey(user),password,0,iterations)
+    session['usr_id'] = retrieve_user_id(username)
+    session['private_key'] = sym_decryption(retrieve_privatekey(username),password,0,iterations)
 
 # Beginning of the website code
 app = Flask(__name__)
@@ -110,15 +103,11 @@ def login():
         if not is_login_valid(username,password):
             error = "You have not entered in the correct information. Please try again."
             return render_template("login.html",error=error)
-    
-        user = is_login_valid(username, password)
 
-        create_session(user, username, password)
+        create_session(username, password)
 
         # If user entered in correct info store the username, user id and private key in cookies
         return redirect(url_for('chats'))
-    
-    return render_template("login.html")
     
     return render_template("login.html")
 
@@ -134,9 +123,9 @@ def registration():
         except ValueError as e:
             return render_template("registration.html", error = e)
         
-        user = create_user(username, password)
+        create_user(username, password)
 
-        create_session(user, username, password)
+        create_session(username, password)
 
         # Successfull registration message will be passed in place of error box
         return render_template("registration.html", error="Success")
@@ -150,16 +139,11 @@ def chats():
         return redirect(url_for('login'))
 
     error = ""
-<<<<<<< HEAD
-
-=======
->>>>>>> 645c576 (Upon creating account, user will redirected to chats page.)
     if request.form.get('logout') == 'clicked':
         session.clear()
         return redirect(url_for('login'))
     if request.method == "POST":
         user2 = request.form.get('user_chat_name')
-<<<<<<< HEAD
         try:
             chat_creation(session['username'], user2)
         except ValueError as e:
@@ -168,19 +152,6 @@ def chats():
     names = chats_retrieval(session['username'])
 
     return render_template("chats.html", user_name = str(session['username']), names = names, error=error)
-=======
-        result = chat_creation(session['username'],user2)
-        if result == "Error_1":
-            error = "You already have a chat with this person, you can't create another one."
-        elif result == "Error_2":
-            error = "This user doesn't seem to exist. Maybe you misspelt their username?"
-        elif result == "Error_3":
-            error = "You can't start a chat with yourself."
-
-    names = chats_retrieval(session['username'])
-
-    return render_template("chats.html", user_name = str(session['username']),names = names,error=error)
->>>>>>> 645c576 (Upon creating account, user will redirected to chats page.)
 
 @app.route('/message',methods = ['GET', 'POST'])
 def message():
