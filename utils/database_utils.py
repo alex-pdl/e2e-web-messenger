@@ -1,53 +1,49 @@
 import sqlite3
 import datetime
 
-class user_db_interaction:
-    def __init__(self, username, password, public_key="public_key", private_key="priavate_key"):
-        self.username = username
-        self.password = password
-        self.public_key = public_key
-        self.private_key = private_key
+database = "users.db"
+filler = "[(', )]"
 
-    def register(self):        
-        connection = sqlite3.connect('users.db')
+def register(username, password_hash, public_key, private_key):        
+        connection = sqlite3.connect(database)
         cursor = connection.cursor()
 
         #inserting username & password hash into the database
         info = [
-                (self.username, self.password,self.public_key,self.private_key)
+                (username, password_hash, public_key, private_key)
         ]
         cursor.executemany("INSERT INTO users (username,password,public_key,private_key) VALUES (?,?,?,?)", info)
         #committing changes & closing the connection
         connection.commit()
         connection.close()
 
-    def password_check(self):
-        connection = sqlite3.connect('users.db')  
+def password_check(username, password):
+        connection = sqlite3.connect(database)  
         cursor = connection.cursor()
-        cursor.execute("SELECT password FROM users WHERE username = (?)", (self.username,))
+        cursor.execute("SELECT password FROM users WHERE username = (?)", (username,))
         #when the pass hash is fetched, it is in the form of a list and has many characters that aren't part of the hash
-        hashed_pass = str(cursor.fetchall()).strip("[(', )]")
+        hashed_pass = str(cursor.fetchall()).strip(filler)
         connection.commit()
         connection.close()
 
-        if self.password == hashed_pass:
+        if password == hashed_pass:
             return True
         else:
             return False
 
-    def retrieve_user_id(self):
-        connection = sqlite3.connect('users.db')
+def retrieve_user_id(username):
+        connection = sqlite3.connect(database)
         cursor = connection.cursor()
-        cursor.execute("SELECT id FROM users WHERE username = (?)", (self.username,))
-        retrieved_id = str(cursor.fetchall()).strip("[(', )]")
+        cursor.execute("SELECT id FROM users WHERE username = (?)", (username,))
+        retrieved_id = str(cursor.fetchall()).strip(filler)
         connection.commit()
         connection.close()
         return retrieved_id    
 
-    def retrieve_privatekey(self):
-        connection = sqlite3.connect('users.db')
+def retrieve_privatekey(username):
+        connection = sqlite3.connect(database)
         cursor = connection.cursor()
-        cursor.execute("SELECT private_key FROM users WHERE username = ?", (self.username,))
+        cursor.execute("SELECT private_key FROM users WHERE username = ?", (username,))
         result = cursor.fetchone()
         encrypted_private_key = result[0]
         connection.close()
@@ -55,17 +51,17 @@ class user_db_interaction:
     
 #checks if the username is not in use
 def username_check(username):
-    connection = sqlite3.connect('users.db')
+    connection = sqlite3.connect(database)
     cursor = connection.cursor()
     cursor.execute("SELECT username FROM users WHERE username = (?)", (username,))
-    fetched_username = str(cursor.fetchall()).strip("[(', )]")
+    fetched_username = str(cursor.fetchall()).strip(filler)
     if username == fetched_username:
         return True
     else:
         return False
     
 def chat_creation(user_1, user_2):
-    connection = sqlite3.connect('users.db')
+    connection = sqlite3.connect(database)
     cursor = connection.cursor()
     #checks if user tried to chat with themselves
     if user_1 != user_2:
@@ -75,7 +71,7 @@ def chat_creation(user_1, user_2):
         existing_users = []
         #formats the name of the users by removing everything but the username
         for i in raw_existing_users:
-            existing_users.append(str(i).strip("[(', )]"))
+            existing_users.append(str(i).strip(filler))
         #checks if user 2 exists
         if user_2 in existing_users:
             if retrieve_chatid(user_1,user_2) == "None":  #Checks if user already has chat with this person
@@ -93,7 +89,7 @@ def chat_creation(user_1, user_2):
         return("Error_3")
 
 def chats_retrieval(username):
-    connection = sqlite3.connect('users.db')
+    connection = sqlite3.connect(database)
     cursor = connection.cursor()
         
     cursor.execute("SELECT username_2 from chats WHERE username_1 = (?)", (username,))
@@ -104,21 +100,21 @@ def chats_retrieval(username):
 
     chat_names = []
     for i in get_names_2:
-        chat_names.append(str(i).strip("[(', )]"))
+        chat_names.append(str(i).strip(filler))
     for i in get_names:
-        chat_names.append(str(i).strip("[(', )]"))
+        chat_names.append(str(i).strip(filler))
     return chat_names
 
 def retrieve_chatid(username_1,username_2):
-    connection = sqlite3.connect('users.db')
+    connection = sqlite3.connect(database)
     cursor = connection.cursor()
     cursor.execute(f"SELECT chatid FROM chats WHERE (username_1 = '{username_1}' AND username_2 = '{username_2}') OR (username_1 = '{username_2}' AND username_2 = '{username_1}')")
-    chat_id = str(cursor.fetchone()).strip("[(', )]")
+    chat_id = str(cursor.fetchone()).strip(filler)
     connection.close()
     return chat_id   
 
 def create_message(sender,chat_id,contents_1, contents_2):
-    connection = sqlite3.connect('users.db')
+    connection = sqlite3.connect(database)
     cursor = connection.cursor()
 
     x = datetime.datetime.now() #get timestamp of message
@@ -132,7 +128,7 @@ def create_message(sender,chat_id,contents_1, contents_2):
     connection.close()
 
 def retrieve_messages(chat_id,which_contents):
-    connection = sqlite3.connect('users.db')
+    connection = sqlite3.connect(database)
     cursor = connection.cursor()
     try:
         cursor.execute("SELECT timestamp,sender FROM message WHERE chat_id = ? ORDER BY timestamp", (chat_id,))
@@ -144,20 +140,20 @@ def retrieve_messages(chat_id,which_contents):
         pass
 
 def retrieve_public_key(username):
-    connection = sqlite3.connect('users.db')
+    connection = sqlite3.connect(database)
     cursor = connection.cursor()
     cursor.execute("SELECT public_key FROM users WHERE username = (?)", (username,))
-    public_key = str(cursor.fetchone()).strip("[(', )]")
+    public_key = str(cursor.fetchone()).strip(filler)
     connection.close()
     return public_key
 
 def determine_column(username,chatid):
     # Determine which column (contents_1 or contents_2) the sender is a part of
-    connection = sqlite3.connect('users.db')
+    connection = sqlite3.connect(database)
     cursor = connection.cursor()
     # If the user's username is stored in username_1, their message contents is stored in conents_1 and vica versa
     cursor.execute("SELECT username_1 FROM chats WHERE chatid = (?)", (chatid,))
-    username_1 = str(cursor.fetchone()).strip("[(', )]")
+    username_1 = str(cursor.fetchone()).strip(filler)
     connection.close()
     if username == username_1:
         return "contents_1"
@@ -166,7 +162,7 @@ def determine_column(username,chatid):
 
 def create_database():
     #creates database with all tables if it doesn't already exist
-    connection = sqlite3.connect('users.db')
+    connection = sqlite3.connect(database)
     cursor = connection.cursor()
     create_users_table = """
                 CREATE TABLE IF NOT EXISTS users (
@@ -198,7 +194,7 @@ def create_database():
     connection.close()
 
 def statistics(): # Gathers general usage statistics and returns them.
-    connection = sqlite3.connect('users.db')
+    connection = sqlite3.connect(database)
     cursor = connection.cursor()
     # Enclose sub queries in brackets to distinguish between them and the main query
     gather_statistics = """
