@@ -64,29 +64,24 @@ def chat_creation(user_1, user_2):
     connection = sqlite3.connect(database)
     cursor = connection.cursor()
     #checks if user tried to chat with themselves
-    if user_1 != user_2:
-        #checks if user_2 exists
-        cursor.execute("SELECT username FROM users")
-        raw_existing_users = cursor.fetchall()
-        existing_users = []
-        #formats the name of the users by removing everything but the username
-        for i in raw_existing_users:
-            existing_users.append(str(i).strip(filler))
-        #checks if user 2 exists
-        if user_2 in existing_users:
-            if retrieve_chatid(user_1,user_2) == "None":  #Checks if user already has chat with this person
-                #adds the user and the person they choose to chat with to the 'chats' database
-                values = [user_1,user_2]
-                cursor.execute("INSERT INTO chats (username_1,username_2) VALUES(?,?)", (values))
-                connection.commit()
-                connection.close()
-                return "Success"
-            else:
-                return("Error_1")
-        else:
-            return("Error_2")
-    else:
+    if user_1 == user_2:
         return("Error_3")
+    
+    #checks if user 2 exists
+    if not username_check(user_2):
+        return("Error_2")
+
+    if retrieve_chatid(user_1, user_2) != "None":  
+        #Checks if user already has chat with this person
+        return("Error_1")
+        
+    #adds the user and the person they choose to chat with to the 'chats' database
+    values = [user_1, user_2]
+    cursor.execute("INSERT INTO chats (username_1,username_2) VALUES(?,?)", (values))
+    connection.commit()
+    connection.close()
+    return "Success"
+        
 
 def chats_retrieval(username):
     connection = sqlite3.connect(database)
