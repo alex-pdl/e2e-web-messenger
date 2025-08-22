@@ -109,7 +109,7 @@ def retrieve_chatid(username_1,username_2):
     connection.close()
     return chat_id   
 
-def create_message(sender,chat_id,contents_1, contents_2):
+def create_message(sender, chat_id, contents_1, contents_2):
     connection = sqlite3.connect(database)
     cursor = connection.cursor()
 
