@@ -181,9 +181,9 @@ def registration():
 
 @app.route('/chats', methods = ['GET','POST'])
 def chats():
-    # Try and except is used as, if a user tries to reach the chats without logging in first, flask will produce an error
-    #if 'usr_id' not in session: # Checks if user isn't already logged in
-    #    return redirect(url_for('login'))
+    # Checks if user isn't already logged in
+    if 'usr_id' not in session: 
+        return redirect(url_for('login'))
 
     username = session['username']
 
