@@ -1,5 +1,6 @@
 import json
 from flask import Flask, url_for, render_template, redirect, request, session
+from flask_socketio import SocketIO, emit
 
 from utils.database_utils import (chats_retrieval, chat_creation,
                                   password_check, register, username_check,
@@ -123,6 +124,7 @@ def decrypt_format_msgs(msg_info, encrypted_message_contents, private_key):
 
 # Beginning of the website code
 app = Flask(__name__)
+socketio = SocketIO(app)
 # A standard homepage which redirects to the login page
 # If a user already has session data stored in cookies, 
 # they will automatically be redirected to the chats page
@@ -180,24 +182,18 @@ def registration():
 @app.route('/chats', methods = ['GET','POST'])
 def chats():
     # Try and except is used as, if a user tries to reach the chats without logging in first, flask will produce an error
-    if 'usr_id' not in session: # Checks if user isn't already logged in
-        return redirect(url_for('login'))
+    #if 'usr_id' not in session: # Checks if user isn't already logged in
+    #    return redirect(url_for('login'))
 
     username = session['username']
-    error = ""
+
     if request.form.get('logout') == 'clicked':
         session.clear()
         return redirect(url_for('login'))
-    if request.method == "POST":
-        user2 = request.form.get('user_chat_name')
-        try:
-            chat_creation(username, user2)
-        except ValueError as e:
-            error = e
 
     names = chats_retrieval(username)
 
-    return render_template("chats.html", user_name = str(username), names = names, error = error)
+    return render_template("chats.html", user_name = str(username), names = names)
 
 @app.route('/message',methods = ['GET', 'POST'])
 def message():
@@ -216,18 +212,31 @@ def message():
             return redirect(url_for('chats'))
         else:
             message = request.form.get('message')
-            store_message(chatid, message, username, selected_name)        
+            store_message(chatid, message, username, selected_name)      
     
     private_key = string_to_tuple(session['private_key'])
     column = determine_column(username, chatid)
     msg_info, encrypted_msg_contents = retrieve_messages(chatid, column)
     
-    messages = decrypt_format_msgs(msg_info, encrypted_msg_contents, private_key)
+    msgs = decrypt_format_msgs(msg_info, encrypted_msg_contents, private_key)
     
-    if len(messages) == 0:
-        messages = ["It appears you don't have any chats with this person. Say hi!"]
+    if len(msgs) == 0:
+        msgs = ["It appears you don't have any chats with this person. Say hi!"]
     
-    return render_template('message.html', selected_user = selected_name, messages = messages)
+    return render_template('message.html', selected_user = selected_name, messages = msgs)
+
+@socketio.on('add_chat')
+def add_chat(name):
+    username = session['username']
+    user2 = name
+
+    try:
+        chat_creation(username, user2)
+    except ValueError as error:
+        socketio.emit('display_error', str(error))
+        return
+
+    socketio.emit('add_chat_btn', name)
 
 if __name__ == "__main__":
     while True:
@@ -254,4 +263,4 @@ if __name__ == "__main__":
     
     app.config['SECRET_KEY'] = f'{secret_key}' # Use secret key specified in settings.json file
     app.config['SESSION_COOKIE_HTTPONLY'] = True # Ensures that cookies are only accessible through HTTP(S) requests and cannot be accessed by any JavaScript
-    app.run(debug=True)
+    socketio.run(app, debug=True)

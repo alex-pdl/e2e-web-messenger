@@ -69,8 +69,8 @@ def chat_creation(user_1, user_2):
     
     #checks if user 2 exists
     if not username_check(user_2):
-        raise ValueError("This user doesn't seem to exist. \
-                         Maybe you misspelt their username?")
+        error = "This user doesn't seem to exist. Maybe you misspelt their username?"
+        raise ValueError(error)
 
     if retrieve_chatid(user_1, user_2) != "None":  
         #Checks if user already has chat with this person
