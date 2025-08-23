@@ -19,7 +19,7 @@
     <div id="chats">
         <ul>
             {% for name in names %}
-                <li><a href="/message?selected_name={{ name }}"><button>{{ name }}</button></a></li>
+                <li><button class="chat-btn" onclick="redirectToChat('{{ name }}')">{{ name }}</button></li>
             {% endfor %}
         </ul>
     </div>

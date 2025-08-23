@@ -64,7 +64,7 @@ body{
     margin-bottom: 10px;
 }
 
-#chats ul li a button{
+.chat-btn{
     font-size: 1.8em;
     padding: 3px 30px 3px 30px;
     margin: 10px auto 10px auto;
@@ -80,11 +80,11 @@ body{
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.236);
 }
 
-#chats ul li a button:hover{
+.chat-btn:hover{
     background-color: black;
 }
 
-#chats ul li a button:active{
+.chat-btn:active{
     background-color: rgb(76, 76, 76);
 }
 

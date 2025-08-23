@@ -2,6 +2,7 @@ let socket = io();
 
 const chatsContainer = document.getElementById("chats");
 const errorMsgDiv = document.getElementById('errorMsg');
+const chatBtns = document.getElementsByClassName('chat-btn');
 
 function addEmptyMessage(){
     const emptyMsgP1 = document.createElement('p');
@@ -27,9 +28,9 @@ socket.on('add_chat_btn', (name) => {
     errorMsgDiv.innerHTML = '';
     document.getElementById('addTextInput').blur();
 
-    let chat = `<li><a href=/message?selected_name=${name}"><button>${name}</button></a></li>`
+    let chat = `<li><button class="chat-btn" onclick=redirectToChat('${name}')>${name}</button></li>`;
 
-    chatsContainer.querySelector('ul').innerHTML += chat
+    chatsContainer.querySelector('ul').innerHTML += chat;
 });
 
 socket.on('display_error', (error) => {
@@ -49,3 +50,7 @@ document.getElementById('addUserSubmitBtn').addEventListener('click', () => {
 
     userInput.value = '';
 });
+
+function redirectToChat(name){
+    window.location.href = `/message?selected_name=${name}`
+}
