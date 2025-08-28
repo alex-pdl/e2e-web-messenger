@@ -1,9 +1,9 @@
 import json
-from flask import Flask, url_for, render_template, redirect, request, session
+from flask import Flask, url_for, render_template, redirect, request, session, abort
 from flask_socketio import SocketIO, emit
 
 from utils.database_utils import (chats_retrieval, chat_creation,
-                                  password_check, register, username_check,
+                                  password_check, register, user_exists,
                                   retrieve_privatekey, retrieve_public_key,
                                   retrieve_chatid, determine_column,
                                   create_message, retrieve_messages,
@@ -70,7 +70,7 @@ def is_register_valid(username, password):
         raise ValueError(
             f"Password contains invalid characters: {ascii_chars}")
 
-    if username_check(username):
+    if user_exists(username) != False:
         raise ValueError("Username is already taken.")
 
 
@@ -139,7 +139,7 @@ def decrypt_format_msgs(msg_info, encrypted_message_contents, private_key):
 
 # Beginning of the website code
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app,  cors_allowed_origins="*")
 # A standard homepage which redirects to the login page
 # If a user already has session data stored in cookies,
 # they will automatically be redirected to the chats page
@@ -148,7 +148,7 @@ socketio = SocketIO(app)
 @app.route('/')
 def homepage():
     if 'usr_id' in session:
-        return redirect(url_for('chats'))
+        return redirect(url_for('chats', name = session['username']))
 
     return redirect(url_for('login'))
 
@@ -158,7 +158,7 @@ def homepage():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if 'usr_id' in session:  # Checks if user isn't already logged in
-        return redirect(url_for('chats', ))
+        return redirect(url_for('chats', name = session['username']))
 
     if request.method == "POST":
         # Gets data submitted
@@ -172,7 +172,7 @@ def login():
         create_session(username, password)
 
         # If user entered in correct info store the username, user id and private key in cookies
-        return redirect(url_for('chats'))
+        return redirect(url_for('chats', name = username))
 
     return render_template("login.html")
 
@@ -199,13 +199,16 @@ def registration():
     return render_template("registration.html")
 
 
-@app.route('/chats', methods=['GET', 'POST'])
-def chats():
+@app.route('/chats/<name>', methods=['GET', 'POST'])
+def chats(name):
     # Checks if user isn't already logged in
     if 'usr_id' not in session:
         return redirect(url_for('login'))
 
     username = session['username']
+
+    if name != username:
+        abort(404)
 
     if request.form.get('logout') == 'clicked':
         session.clear()
@@ -213,8 +216,7 @@ def chats():
 
     names = chats_retrieval(username)
 
-    return render_template("chats.html", user_name=str(username), names=names)
-
+    return render_template("chats.html",name = username, user_name=str(username), names=names)
 
 @app.route('/message', methods=['GET', 'POST'])
 def message():
@@ -230,7 +232,7 @@ def message():
 
     if request.method == "POST":
         if request.form.get('return') == 'clicked':
-            return redirect(url_for('chats'))
+            return redirect(url_for('chats', name = username))
         else:
             message = request.form.get('message')
             store_message(chatid, message, username, selected_name)
@@ -253,12 +255,17 @@ def add_chat(name):
     user2 = name
 
     try:
-        chat_creation(username, user2)
+        proper_case_username = user_exists(user2)
+        
+        if proper_case_username == False:
+            raise ValueError("This user doesn't seem to exist. Maybe you misspelt their username?")
+
+        chat_creation(proper_case_username, username)
     except ValueError as error:
-        socketio.emit('display_error', str(error))
+        socketio.emit('display_error', str(error), to=request.sid)
         return
 
-    socketio.emit('add_chat_btn', name, namespace=username)
+    socketio.emit('add_chat_btn', proper_case_username, to=request.sid)
 
 
 if __name__ == "__main__":
@@ -288,4 +295,4 @@ if __name__ == "__main__":
     app.config['SECRET_KEY'] = f'{secret_key}'
     # Ensures that cookies are only accessible through HTTP(S) requests and cannot be accessed by any JavaScript
     app.config['SESSION_COOKIE_HTTPONLY'] = True
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
