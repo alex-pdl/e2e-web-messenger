@@ -6,6 +6,8 @@ const user = url.substring(url.lastIndexOf('/')+1);
 
 const socket = io();
 
+socket.emit('store_sid', user);
+
 function addEmptyMessage(){
     const emptyMsgP1 = document.createElement('p');
     const emptyMsgP2 = document.createElement('p');
@@ -56,3 +58,7 @@ document.getElementById('addUserSubmitBtn').addEventListener('click', () => {
 function redirectToChat(name){
     window.location.href = `/message?selected_name=${name}`
 }
+
+window.addEventListener('beforeunload', () => {
+    socket.emit('remove_sid', user);
+    });

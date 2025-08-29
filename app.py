@@ -144,11 +144,14 @@ socketio = SocketIO(app,  cors_allowed_origins="*")
 # If a user already has session data stored in cookies,
 # they will automatically be redirected to the chats page
 
+# {username: sid}
+sids = {}
+
 
 @app.route('/')
 def homepage():
     if 'usr_id' in session:
-        return redirect(url_for('chats', name = session['username']))
+        return redirect(url_for('chats', name=session['username']))
 
     return redirect(url_for('login'))
 
@@ -158,7 +161,7 @@ def homepage():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if 'usr_id' in session:  # Checks if user isn't already logged in
-        return redirect(url_for('chats', name = session['username']))
+        return redirect(url_for('chats', name=session['username']))
 
     if request.method == "POST":
         # Gets data submitted
@@ -172,7 +175,7 @@ def login():
         create_session(username, password)
 
         # If user entered in correct info store the username, user id and private key in cookies
-        return redirect(url_for('chats', name = username))
+        return redirect(url_for('chats', name=username))
 
     return render_template("login.html")
 
@@ -216,7 +219,8 @@ def chats(name):
 
     names = chats_retrieval(username)
 
-    return render_template("chats.html",name = username, user_name=str(username), names=names)
+    return render_template("chats.html", name=username, user_name=str(username), names=names)
+
 
 @app.route('/message', methods=['GET', 'POST'])
 def message():
@@ -232,7 +236,7 @@ def message():
 
     if request.method == "POST":
         if request.form.get('return') == 'clicked':
-            return redirect(url_for('chats', name = username))
+            return redirect(url_for('chats', name=username))
         else:
             message = request.form.get('message')
             store_message(chatid, message, username, selected_name)
@@ -249,6 +253,16 @@ def message():
     return render_template('message.html', selected_user=selected_name, messages=msgs)
 
 
+@socketio.on('store_sid')
+def store_sid(username):
+    sids[username] = request.sid
+
+
+@socketio.on('remove_sid')
+def remove_sid(username):
+    del sids[username]
+
+
 @socketio.on('add_chat')
 def add_chat(name):
     username = session['username']
@@ -256,16 +270,17 @@ def add_chat(name):
 
     try:
         proper_case_username = user_exists(user2)
-        
+
         if proper_case_username == False:
-            raise ValueError("This user doesn't seem to exist. Maybe you misspelt their username?")
+            raise ValueError(
+                "This user doesn't seem to exist. Maybe you misspelt their username?")
 
         chat_creation(proper_case_username, username)
     except ValueError as error:
-        socketio.emit('display_error', str(error), to=request.sid)
+        socketio.emit('display_error', str(error), to=sids.get(username))
         return
 
-    socketio.emit('add_chat_btn', proper_case_username, to=request.sid)
+    socketio.emit('add_chat_btn', proper_case_username, to=sids.get(username))
 
 
 if __name__ == "__main__":
@@ -295,4 +310,4 @@ if __name__ == "__main__":
     app.config['SECRET_KEY'] = f'{secret_key}'
     # Ensures that cookies are only accessible through HTTP(S) requests and cannot be accessed by any JavaScript
     app.config['SESSION_COOKIE_HTTPONLY'] = True
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+    socketio.run(app, debug=True)
