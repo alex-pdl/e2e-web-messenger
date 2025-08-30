@@ -264,23 +264,33 @@ def remove_sid(username):
 
 
 @socketio.on('add_chat')
-def add_chat(name):
-    username = session['username']
-    user2 = name
+def add_chat(sender, receiver):
+    sender_sid = sids.get(sender)
 
     try:
-        proper_case_username = user_exists(user2)
+        normalised_reciever_username = user_exists(receiver)
 
-        if proper_case_username == False:
+        if normalised_reciever_username == False:
             raise ValueError(
                 "This user doesn't seem to exist. Maybe you misspelt their username?")
 
-        chat_creation(proper_case_username, username)
+        receiver_sid = sids.get(normalised_reciever_username)
+
+        chat_creation(normalised_reciever_username, sender)
     except ValueError as error:
-        socketio.emit('display_error', str(error), to=sids.get(username))
+        if sender_sid is not None:
+            socketio.emit('display_error', str(error), to=sender_sid)
         return
 
-    socketio.emit('add_chat_btn', proper_case_username, to=sids.get(username))
+    if sender_sid is not None:
+        socketio.emit('add_chat_btn', normalised_reciever_username,
+                      to=sender_sid)
+
+    if receiver_sid is not None:
+        # New button for reciever
+        socketio.emit('add_chat_btn', sender, to=receiver_sid)
+        # Added chat msg for reciever
+        socketio.emit('new_chat_msg', sender, to=receiver_sid)
 
 
 if __name__ == "__main__":

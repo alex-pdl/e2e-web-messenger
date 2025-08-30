@@ -15,8 +15,7 @@ function addEmptyMessage(){
     emptyMsgP1.textContent = 'No chats yet! 👋';
     emptyMsgP2.textContent = 'Start a conversation by adding a user below.';
 
-    chatsContainer.append(emptyMsgP1);
-    chatsContainer.append(emptyMsgP2);
+    chatsContainer.append(emptyMsgP1, emptyMsgP2);
 }
 
 if (chatsContainer.querySelector('ul').childElementCount == 0){
@@ -25,9 +24,7 @@ if (chatsContainer.querySelector('ul').childElementCount == 0){
 
 socket.on('add_chat_btn', (name) => {
     /* Remove empty message text*/
-    chatsContainer.querySelectorAll('p').forEach((element) => {
-        element.remove();
-    });
+    chatsContainer.querySelectorAll('p').forEach((elmt) => {elmt.remove();});
 
     errorMsgDiv.innerHTML = '';
     document.getElementById('addTextInput').blur();
@@ -41,24 +38,32 @@ socket.on('display_error', (error) => {
     errorMsgDiv.innerHTML = `<p>${error}</p>`;
 });
 
+socket.on('new_chat_msg', (name) => {
+    const newChatMsg = document.createElement("div");
+    newChatMsg.textContent = `${name} has started a new chat with you.`;
+    newChatMsg.id = 'new-chat-msg';
+    document.body.appendChild(newChatMsg);
+
+    document.getElementById('new-chat-msg').addEventListener('animationend', () => {
+    document.getElementById("new-chat-msg").remove();});
+})
+
 document.getElementById('addUserSubmitBtn').addEventListener('click', () => {
     const userInput = document.getElementById('addTextInput');
+    const inputName = userInput.value.trim()
     
-    if (userInput.value === ''){
-        return
-    };
+    if (inputName === ''){return};
 
-    let inputName = userInput.value;
-
-    socket.emit('add_chat', inputName);
+    /*Args: event name, sender, receiver*/
+    socket.emit('add_chat', user, inputName);
 
     userInput.value = '';
 });
 
 function redirectToChat(name){
-    window.location.href = `/message?selected_name=${name}`
+    window.location.href = `/message?selected_name=${encodeURIComponent(name)}`;
 }
 
 window.addEventListener('beforeunload', () => {
     socket.emit('remove_sid', user);
-    });
+});
