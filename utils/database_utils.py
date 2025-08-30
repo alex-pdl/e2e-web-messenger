@@ -5,72 +5,75 @@ database = "users.db"
 filler = "[(', )]"
 
 def register(username, password_hash, public_key, private_key):        
-        connection = sqlite3.connect(database)
-        cursor = connection.cursor()
-
-        #inserting username & password hash into the database
-        info = [
-                (username, password_hash, public_key, private_key)
-        ]
-        cursor.executemany("INSERT INTO users (username,password,public_key,private_key) VALUES (?,?,?,?)", info)
-        #committing changes & closing the connection
-        connection.commit()
-        connection.close()
-
-def password_check(username, password):
-        connection = sqlite3.connect(database)  
-        cursor = connection.cursor()
-        cursor.execute("SELECT password FROM users WHERE username = (?)", (username,))
-        #when the pass hash is fetched, it is in the form of a list and has many characters that aren't part of the hash
-        hashed_pass = str(cursor.fetchall()).strip(filler)
-        connection.commit()
-        connection.close()
-
-        if password == hashed_pass:
-            return True
-        else:
-            return False
-
-def retrieve_user_id(username):
-        connection = sqlite3.connect(database)
-        cursor = connection.cursor()
-        cursor.execute("SELECT id FROM users WHERE username = (?)", (username,))
-        retrieved_id = str(cursor.fetchall()).strip(filler)
-        connection.commit()
-        connection.close()
-        return retrieved_id    
-
-def retrieve_privatekey(username):
-        connection = sqlite3.connect(database)
-        cursor = connection.cursor()
-        cursor.execute("SELECT private_key FROM users WHERE username = ?", (username,))
-        result = cursor.fetchone()
-        encrypted_private_key = result[0]
-        connection.close()
-        return encrypted_private_key
-    
-#checks if the username is not in use
-def username_check(username):
     connection = sqlite3.connect(database)
     cursor = connection.cursor()
-    cursor.execute("SELECT username FROM users WHERE username = (?)", (username,))
-    fetched_username = str(cursor.fetchall()).strip(filler)
-    if username == fetched_username:
+
+    #inserting username & password hash into the database
+    info = [
+            (username, password_hash, public_key, private_key)
+    ]
+    cursor.executemany("INSERT INTO users (username,password,public_key,private_key) VALUES (?,?,?,?)", info)
+    #committing changes & closing the connection
+    connection.commit()
+    connection.close()
+
+def password_check(username, password):
+    connection = sqlite3.connect(database)  
+    cursor = connection.cursor()
+    cursor.execute("SELECT password FROM users WHERE username = (?)", (username,))
+    #when the pass hash is fetched, it is in the form of a list and has many characters that aren't part of the hash
+    hashed_pass = str(cursor.fetchall()).strip(filler)
+    connection.commit()
+    connection.close()
+
+    if password == hashed_pass:
         return True
     else:
         return False
+
+def retrieve_user_id(username):
+    connection = sqlite3.connect(database)
+    cursor = connection.cursor()
+    cursor.execute("SELECT id FROM users WHERE username = (?)", (username,))
+    retrieved_id = str(cursor.fetchall()).strip(filler)
+    connection.commit()
+    connection.close()
+    return retrieved_id    
+
+def retrieve_privatekey(username):
+    connection = sqlite3.connect(database)
+    cursor = connection.cursor()
+    cursor.execute("SELECT private_key FROM users WHERE username = ?", (username,))
+    result = cursor.fetchone()
+    encrypted_private_key = result[0]
+    connection.close()
+    return encrypted_private_key
+    
+#checks if the username is not in use
+def user_exists(username):
+    connection = sqlite3.connect(database)
+    cursor = connection.cursor()
+    cursor.execute("SELECT username FROM users")
+    existing_users = cursor.fetchall()
+
+    for i in existing_users:
+        if username.casefold() == i[0].casefold():
+            return i[0]
+
+    return False
     
 def chat_creation(user_1, user_2):
     connection = sqlite3.connect(database)
     cursor = connection.cursor()
+
     #checks if user tried to chat with themselves
     if user_1 == user_2:
         raise ValueError("You can't start a chat with yourself.")
     
     #checks if user 2 exists
-    if not username_check(user_2):
-        raise ValueError("This user doesn't seem to exist. \
-                         Maybe you misspelt their username?")
+    if not user_exists(user_2):
+        error = "This user doesn't seem to exist. Maybe you misspelt their username?"
+        raise ValueError(error)
 
     if retrieve_chatid(user_1, user_2) != "None":  
         #Checks if user already has chat with this person
