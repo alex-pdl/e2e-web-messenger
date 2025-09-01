@@ -222,14 +222,14 @@ def chats(name):
     return render_template("chats.html", name=username, user_name=str(username), names=names)
 
 
-@app.route('/message', methods=['GET', 'POST'])
-def message():
+@app.route('/messages/<name>', methods=['GET', 'POST'])
+def message(name):
     if 'usr_id' not in session:
         return redirect(url_for('login'))
 
     username = session['username']
-    selected_name = request.args.get('selected_name')
-    chatid = retrieve_chatid(username, selected_name)
+    chatting_with = request.args.get('chatting_with')
+    chatid = retrieve_chatid(username, chatting_with)
 
     if chatid == 'None':
         return redirect(url_for('login'))
@@ -239,7 +239,7 @@ def message():
             return redirect(url_for('chats', name=username))
         else:
             message = request.form.get('message')
-            store_message(chatid, message, username, selected_name)
+            store_message(chatid, message, username, chatting_with)
 
     private_key = string_to_tuple(session['private_key'])
     column = determine_column(username, chatid)
@@ -250,7 +250,7 @@ def message():
     if len(msgs) == 0:
         msgs = ["It appears you don't have any chats with this person. Say hi!"]
 
-    return render_template('message.html', selected_user=selected_name, messages=msgs)
+    return render_template('message.html', selected_user=chatting_with, messages=msgs)
 
 
 @socketio.on('store_sid')

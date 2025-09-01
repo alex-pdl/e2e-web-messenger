@@ -61,7 +61,8 @@ document.getElementById('addUserSubmitBtn').addEventListener('click', () => {
 });
 
 function redirectToChat(name){
-    window.location.href = `/message?selected_name=${encodeURIComponent(name)}`;
+    const link = `/messages/${encodeURIComponent(user)}?chatting_with=${encodeURIComponent(name)}`;
+    window.location.href = link;
 }
 
 window.addEventListener('beforeunload', () => {
