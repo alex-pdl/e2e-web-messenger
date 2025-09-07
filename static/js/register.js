@@ -1,3 +1,10 @@
+import {
+    genRsaKey, 
+    createAESKey, 
+    encryptKeyForStorage, 
+    decryptKeyFromStorage
+} from './modules/crypto/cryptoUtils.js';
+
 const errorMsg = document.getElementById('errorMsg');
 const errorMsgP = errorMsg.querySelectorAll('p');
 

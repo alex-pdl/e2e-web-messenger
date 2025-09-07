@@ -32,6 +32,7 @@
     </form>
     <button id="returnBtn"><a href="/login"><span class="material-symbols-outlined">arrow_back_ios_new</span></a></button>
     </div>
-    <script src="{{ url_for('static', filename='js/register.js')}}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/modules/crypto/cryptoUtils.js') }}"></script>
+    <script type= "module" src="{{ url_for('static', filename='js/register.js')}}"></script>
 </body>
 </html>
