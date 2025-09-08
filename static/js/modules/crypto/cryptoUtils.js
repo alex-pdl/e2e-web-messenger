@@ -100,3 +100,27 @@ export async function decryptKeyFromStorage(importedKey, unwrapKey){
     
     return decryptedKey;
 }
+
+export async function encryptMessage(message, publicKey){
+    const messageToBuffer = str2ab(message);
+
+    const encryptedMessage = await crypto.subtle.encrypt(
+        {'name': 'RSA-OAEP'},
+        publicKey,
+        messageToBuffer
+    );
+
+    return btoa(ab2str(encryptedMessage));
+}
+
+export async function decryptMessage(message, privateKey){
+    const messageToBuffer = str2ab(atob(message));
+
+    const decryptedMessage = await crypto.subtle.decrypt(
+        {'name': 'RSA-OAEP'},
+        privateKey,
+        messageToBuffer
+    );
+
+    return ab2str(decryptedMessage);
+}
