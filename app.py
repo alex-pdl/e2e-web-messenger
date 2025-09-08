@@ -182,23 +182,6 @@ def login():
 
 @app.route('/registration', methods=['GET', 'POST'])
 def registration():
-    # Submitting info (loggin in) uses POST, whereas loading the page uses GET
-    if request.method == "POST":
-        username = request.form.get('username')
-        password = request.form.get('password')
-
-        try:
-            is_register_valid(username, password)
-        except ValueError as e:
-            return render_template("registration.html", error=e)
-
-        create_user(username, password)
-
-        create_session(username, password)
-
-        # Successfull registration message will be passed in place of error box
-        return render_template("registration.html", error="Success")
-
     return render_template("registration.html")
 
 

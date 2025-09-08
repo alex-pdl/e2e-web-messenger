@@ -10,7 +10,6 @@
 </head>
 <body>
     <div id="container">
-    <form method="POST" action='{{url_for('registration')}}'>
         <div id="title">Register</div>
         <div class="inputBox" id="usernameBox">
             <label for="username">Username </label>
@@ -22,14 +21,11 @@
             <input type="password" id="password" name="password" minlength="8" maxlength="256" required>
         </div>
 
-        <input id="submitBtn" type="submit" value="Register">
+        <button id="submitBtn">Register</button>
 
         <div id="errorMsg">
-            {% if error%}
-            <p>{{error}}</p>
-            {% endif%}
+            <p></p>
         </div>
-    </form>
     <button id="returnBtn"><a href="/login"><span class="material-symbols-outlined">arrow_back_ios_new</span></a></button>
     </div>
     <script type="module" src="{{ url_for('static', filename='js/modules/crypto/cryptoUtils.js') }}"></script>
