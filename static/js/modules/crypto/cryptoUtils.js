@@ -101,6 +101,29 @@ export async function decryptKeyFromStorage(importedKey, unwrapKey){
     return decryptedKey;
 }
 
+export async function exportPublicKeyForStorage(publicKey){
+    const exportedPublicKey = await crypto.subtle.exportKey(
+        'spki',
+        publicKey
+    );
+
+    const publicKeyAsBase64String = btoa(ab2str(exportedPublicKey));
+
+    return publicKeyAsBase64String;
+}
+
+export async function importPublicKeyFromStorage(publicKey){
+    const publicKeyAsAB = str2ab(atob(publicKey));
+
+    const importedPublicKey = await crypto.subtle.importKey(
+        'spki',
+        publicKeyAsAB,
+        {'name': 'RSA-OAEP', 'hash': 'SHA-256'}
+    );
+
+    return importedPublicKey;
+}
+
 export async function encryptMessage(message, publicKey){
     const messageToBuffer = str2ab(message);
 
@@ -123,4 +146,17 @@ export async function decryptMessage(message, privateKey){
     );
 
     return ab2str(decryptedMessage);
+}
+
+export async function hashPassword(password) {
+    const encoder = new TextEncoder();
+  
+    const encodedPassword = encoder.encode(password);
+  
+    const hashedPassword = await window.crypto.subtle.digest(
+        "SHA-256", 
+        encodedPassword
+    );
+  
+  return btoa(ab2str(hashedPassword));
 }

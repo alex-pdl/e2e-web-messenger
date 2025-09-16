@@ -9,30 +9,26 @@
     <title>Senderr</title>
 </head>
 <body>
-    <div id="title">Welcome {{ user_name }}!</div>
-    <div id="logoutBtn">
+    <div id="title" style="display: none;"></div>
+    <div id="logoutBtn" style="display: none;">
         <form method="post">
             <button type="submit" name="logout" value="clicked">Logout</button>
         </form>
     </div>
 
-    <div id="chats">
+    <div id="chats" style="display: none;">
         <ul>
-            {% for name in names %}
-                <li><button class="chat-btn" onclick="redirectToChat('{{ name }}')">{{ name }}</button></li>
-            {% endfor %}
         </ul>
     </div>
 
     <footer>
-        <div id="addUser">
+        <div id="addUser" style="display: none;">
             <form method="post">
                 <label for="user_chat_name">User's name: </label><br>
                 <input id="addTextInput" type="text" id="user_chat_name" name="user_chat_name" maxlength="64" required>
                 <button id="addUserSubmitBtn">Add user to chat</button>
             </form>
         </div>
-
         <div id="errorMsg"></div>
     </footer>
     <script src="{{ url_for('static', filename='js/chats.js')}}"></script>

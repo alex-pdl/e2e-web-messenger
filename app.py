@@ -2,7 +2,7 @@ import json
 from flask import Flask, url_for, render_template, redirect, request, session, abort
 from flask_socketio import SocketIO, emit
 
-from utils.database_utils import (chats_retrieval, chat_creation,
+from utils.database_utils import (retrieve_chats, chat_creation,
                                   password_check, register, user_exists,
                                   retrieve_privatekey, retrieve_public_key,
                                   retrieve_chatid, determine_column,
@@ -14,8 +14,12 @@ from crypto_algorithms import (generate_prime, key_gen, hash_password,
                                rsa_encrypt, rsa_decrypt)
 
 from utils.input_utils import (get_salt, get_iterations, get_key_size,
-                               get_secret_key, special_char_checker,
-                               ascii_checker, string_to_tuple)
+                               get_secret_key, ascii_checker,
+                               string_to_tuple, is_valid_username)
+
+from utils.crypto_utils import hash_pass
+
+import secrets
 
 # The program requires certain parameters to run, I have given the user
 # the option to generate these paramters upon first startup
@@ -50,49 +54,22 @@ def write_settings():
 
 def is_login_valid(username, password):
     # Hashes password submitted
-    password_hash = hash_password(password, salt, iterations, prime_number)
+    password_hash = hash_pass(password)
 
     return password_check(username, password_hash)
 
 
-def is_register_valid(username, password):
-    if password == password.lower():
-        raise ValueError(
-            "Password must include at least one uppercase letter.")
-
-    special_chars = special_char_checker(username)
-    if len(special_chars) != 0:
-        raise ValueError(
-            f"Username cannot include special characters such as: {special_chars}")
-
-    ascii_chars = ascii_checker(password)
-    if len(ascii_chars) != 0:
-        raise ValueError(
-            f"Password contains invalid characters: {ascii_chars}")
+def is_register_valid(username):
+    if not is_valid_username(username):
+        raise ValueError("Username does not meet specified requirements")
 
     if user_exists(username) != False:
-        raise ValueError("Username is already taken.")
+        raise ValueError("Username is already taken")
 
 
-def create_user(username, password):
-    # Generates a public and private key for the user
-    public_key, private_key = key_gen(keysize)
-    # Encrypts the private key with the users password
-    private_key = sym_encryption(str(private_key), password, 0, iterations)
-    # Hashes the password
-    password_hash = hash_password(password, salt, iterations, prime_number)
-
-    register(username, password_hash, str(public_key), private_key)
-
-
-def create_session(username, password):
+def create_session(username):
     session['username'] = username
     session['usr_id'] = retrieve_user_id(username)
-
-    encrypted_private_key = retrieve_privatekey(username)
-    decrypted_private_key = sym_decryption(
-        encrypted_private_key, password, 0, iterations)
-    session['private_key'] = decrypted_private_key
 
 
 def store_message(chatid, msg_contents, sender_username, receiver_username):
@@ -139,13 +116,14 @@ def decrypt_format_msgs(msg_info, encrypted_message_contents, private_key):
 
 # Beginning of the website code
 app = Flask(__name__)
-socketio = SocketIO(app,  cors_allowed_origins="*")
+socketio = SocketIO(app, manage_session=False, cors_allowed_origins="*")
 # A standard homepage which redirects to the login page
 # If a user already has session data stored in cookies,
 # they will automatically be redirected to the chats page
 
 # {username: sid}
 sids = {}
+tokens = {}
 
 
 @app.route('/')
@@ -155,28 +133,9 @@ def homepage():
 
     return redirect(url_for('login'))
 
-# The login page
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if 'usr_id' in session:  # Checks if user isn't already logged in
-        return redirect(url_for('chats', name=session['username']))
-
-    if request.method == "POST":
-        # Gets data submitted
-        username = request.form.get('username')
-        password = request.form.get('password')
-
-        if not is_login_valid(username, password):
-            error = "You have not entered in the correct information. Please try again."
-            return render_template("login.html", error=error)
-
-        create_session(username, password)
-
-        # If user entered in correct info store the username, user id and private key in cookies
-        return redirect(url_for('chats', name=username))
-
     return render_template("login.html")
 
 
@@ -185,60 +144,91 @@ def registration():
     return render_template("registration.html")
 
 
-@app.route('/chats/<name>', methods=['GET', 'POST'])
-def chats(name):
-    # Checks if user isn't already logged in
-    if 'usr_id' not in session:
-        return redirect(url_for('login'))
-
-    username = session['username']
-
-    if name != username:
-        abort(404)
-
-    if request.form.get('logout') == 'clicked':
-        session.clear()
-        return redirect(url_for('login'))
-
-    names = chats_retrieval(username)
-
-    return render_template("chats.html", name=username, user_name=str(username), names=names)
+@app.route('/chats', methods=['GET', 'POST'])
+def chats():
+    return render_template("chats.html")
 
 
-@app.route('/messages/<name>', methods=['GET', 'POST'])
-def message(name):
-    if 'usr_id' not in session:
-        return redirect(url_for('login'))
-
-    username = session['username']
+@app.route('/messages', methods=['GET', 'POST'])
+def message():
     chatting_with = request.args.get('chatting_with')
-    chatid = retrieve_chatid(username, chatting_with)
 
-    if chatid == 'None':
-        return redirect(url_for('login'))
-
-    if request.method == "POST":
-        if request.form.get('return') == 'clicked':
-            return redirect(url_for('chats', name=username))
-        else:
-            message = request.form.get('message')
-            store_message(chatid, message, username, chatting_with)
-
-    private_key = string_to_tuple(session['private_key'])
-    column = determine_column(username, chatid)
-    msg_info, encrypted_msg_contents = retrieve_messages(chatid, column)
-
-    msgs = decrypt_format_msgs(msg_info, encrypted_msg_contents, private_key)
-
-    if len(msgs) == 0:
-        msgs = ["It appears you don't have any chats with this person. Say hi!"]
-
-    return render_template('message.html', selected_user=chatting_with, messages=msgs)
+    print(chatting_with)
+    return render_template('message.html')
 
 
-@socketio.on('store_sid')
-def store_sid(username):
-    sids[username] = request.sid
+@socketio.on('verify_session')
+def verify_session(data):
+    if data['username'] not in tokens:
+        emit('unverified', to=request.sid)
+        return
+
+    if tokens[data['username']] != data['sessionToken']:
+        emit('unverified', to=request.sid)
+        return
+
+    sids[data['username']] = request.sid
+
+    emit('verified', to=sids[data['username']])
+
+
+@socketio.on('register_user')
+def register_user(username, hashed_password, public_key, private_key):
+    sid = request.sid
+
+    try:
+        is_register_valid(username)
+    except ValueError as error:
+        emit('display_error', str(error), to=sid)
+        return
+
+    doubleHashedPwd = hash_pass(hashed_password)
+
+    register(username, doubleHashedPwd, public_key, private_key)
+
+    token = secrets.token_urlsafe(24)
+    tokens[username] = token
+
+    emit('success', token)
+
+
+@socketio.on('login')
+def login_user(username, password):
+    sid = request.sid
+
+    if not is_login_valid(username, password) or not is_valid_username(username):
+        emit('display_error', "Invalid details", to=sid)
+        return
+
+    token = secrets.token_urlsafe(24)
+    tokens[username] = token
+
+    data = {
+        'sessionToken': token,
+        'publicKey': retrieve_public_key(username),
+        'privateKey': retrieve_privatekey(username)
+    }
+
+    emit('success', data, to=sid)
+
+
+@socketio.on('display_chats')
+def display_chats(sessionToken):
+    for username_token in tokens.items():
+        username = username_token[0]
+        token = username_token[1]
+
+        if token == sessionToken:
+            user = username
+            break
+
+    if user == None or user not in sids:
+        return
+
+    chats = retrieve_chats(username)
+
+    for chat in chats:
+        socketio.emit('add_chat_btn', chat, to=sids[user])
 
 
 @socketio.on('remove_sid')
@@ -247,7 +237,19 @@ def remove_sid(username):
 
 
 @socketio.on('add_chat')
-def add_chat(sender, receiver):
+def add_chat(idToken, receiver):
+    if idToken not in tokens.values():
+        emit('unverified', to=sender_sid)
+
+    # Finds sender's username, based on their session token
+    for username_token in tokens.items():
+        username = username_token[0]
+        token = username_token[1]
+
+        if token == idToken:
+            sender = username
+            break
+
     sender_sid = sids.get(sender)
 
     try:
@@ -303,4 +305,6 @@ if __name__ == "__main__":
     app.config['SECRET_KEY'] = f'{secret_key}'
     # Ensures that cookies are only accessible through HTTP(S) requests and cannot be accessed by any JavaScript
     app.config['SESSION_COOKIE_HTTPONLY'] = True
+
+    app.config['SESSION_TYPE'] = 'filesystem'
     socketio.run(app, debug=True)
