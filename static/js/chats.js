@@ -21,11 +21,6 @@ const publicKey = await importPublicKeyFromStorage(localStorage.getItem('exporte
 
 const socket = io();
 
-function addChatButton(name){
-    /* Remove empty message text*/
-    
-};
-
 // User auth & page load
 socket.emit('verify_session', sessionToken);
 
