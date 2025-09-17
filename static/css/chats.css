@@ -26,6 +26,33 @@ body{
     transform: skewX(-15deg);
 }
 
+#logoutBtn{
+    display: inline-block;
+}
+
+#logoutBtn{
+    margin-top: 10px;
+    width: 100px;
+
+    padding: 3px;
+
+    font-weight: 100;
+    font-size: 1.1em;
+
+    background-color: white;
+
+    border: 1.5px solid black;
+    border-radius: 5px;
+}
+
+#logoutBtn:hover{
+    background-color: rgb(237, 237, 237);
+}
+
+#logoutBtn:active{
+    background-color: rgb(193, 193, 193);
+}
+
 
 #chats{
     width: 400px;
@@ -103,10 +130,6 @@ footer{
     align-items: center;
 }
 
-#logoutBtn{
-    display: inline-block;
-}
-
 #addUser{
     display: block;
     width: 220px;
@@ -179,29 +202,6 @@ footer{
 
 #errorMsg p:empty{
     display: none;
-}
-
-#logoutBtn form button{
-    margin-top: 10px;
-    width: 100px;
-
-    padding: 3px;
-
-    font-weight: 100;
-    font-size: 1.1em;
-
-    background-color: white;
-
-    border: 1.5px solid black;
-    border-radius: 5px;
-}
-
-#logoutBtn form button:hover{
-    background-color: rgb(237, 237, 237);
-}
-
-#logoutBtn form button:active{
-    background-color: rgb(193, 193, 193);
 }
 
 #new-chat-msg{

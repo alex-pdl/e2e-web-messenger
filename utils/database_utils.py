@@ -56,7 +56,7 @@ def retrieve_privatekey(username):
     connection.close()
     return encrypted_private_key
 
-# checks if the username is not in use
+# Checks if the username is not in use
 
 
 def user_exists(username):
@@ -72,31 +72,15 @@ def user_exists(username):
     return False
 
 
-def chat_creation(user_1, user_2):
+def create_chat_entry(user_1, user_2, aes_key_1, aes_key_2):
     connection = sqlite3.connect(database)
     cursor = connection.cursor()
 
-    # checks if user tried to chat with themselves
-    if user_1 == user_2:
-        raise ValueError("You can't start a chat with yourself.")
-
-    # checks if user 2 exists
-    if not user_exists(user_2):
-        error = "This user doesn't seem to exist. Maybe you misspelt their username?"
-        raise ValueError(error)
-
-    if retrieve_chatid(user_1, user_2) != "None":
-        # Checks if user already has chat with this person
-        raise ValueError(
-            "You already have a chat with this person, you can't create another one.")
-
-    # adds the user and the person they choose to chat with to the 'chats' database
-    values = [user_1, user_2]
+    values = [user_1, user_2, aes_key_1, aes_key_2]
     cursor.execute(
-        "INSERT INTO chats (username_1,username_2) VALUES(?,?)", (values))
+        "INSERT INTO chats (username_1, username_2, aes_key_1, aes_key_2) VALUES(?,?,?,?)", (values))
     connection.commit()
     connection.close()
-    return True
 
 
 def retrieve_chats(username):
@@ -202,7 +186,9 @@ def create_database():
                 CREATE TABLE IF NOT EXISTS chats (
                 chatid INTEGER PRIMARY KEY NOT NULL,
                 username_1 TEXT,
-                username_2 TEXT
+                username_2 TEXT,
+                aes_key_1 TEXT,
+                aes_key_2 TEXT
             ) """
     cursor.execute(create_chats_table)
     create_message_table = """

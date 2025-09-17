@@ -2,7 +2,7 @@ import json
 from flask import Flask, url_for, render_template, redirect, request, session, abort
 from flask_socketio import SocketIO, emit
 
-from utils.database_utils import (retrieve_chats, chat_creation,
+from utils.database_utils import (retrieve_chats, create_chat_entry,
                                   password_check, register, user_exists,
                                   retrieve_privatekey, retrieve_public_key,
                                   retrieve_chatid, determine_column,
@@ -57,6 +57,22 @@ def is_login_valid(username, password):
     password_hash = hash_pass(password)
 
     return password_check(username, password_hash)
+
+
+def is_valid_chat(user_1, user_2):
+    # checks if user tried to chat with themselves
+    if user_1 == user_2:
+        raise ValueError("You can't start a chat with yourself.")
+
+    # checks if user 2 exists
+    if not user_exists(user_2):
+        error = "This user doesn't seem to exist. Maybe you misspelt their username?"
+        raise ValueError(error)
+
+    if retrieve_chatid(user_1, user_2) != "None":
+        # Checks if user already has chat with this person
+        raise ValueError(
+            "You already have a chat with this person, you can't create another one.")
 
 
 def is_register_valid(username):
@@ -123,6 +139,7 @@ socketio = SocketIO(app, manage_session=False, cors_allowed_origins="*")
 
 # {username: sid}
 sids = {}
+# {session_token: username}
 tokens = {}
 
 
@@ -158,18 +175,20 @@ def message():
 
 
 @socketio.on('verify_session')
-def verify_session(data):
-    if data['username'] not in tokens:
+def verify_session(session_token):
+    if type(session_token) != str:
         emit('unverified', to=request.sid)
         return
 
-    if tokens[data['username']] != data['sessionToken']:
+    if session_token not in tokens:
         emit('unverified', to=request.sid)
         return
 
-    sids[data['username']] = request.sid
+    user = tokens[session_token]
 
-    emit('verified', to=sids[data['username']])
+    sids[user] = request.sid
+
+    emit('verified', to=sids[user])
 
 
 @socketio.on('register_user')
@@ -187,7 +206,7 @@ def register_user(username, hashed_password, public_key, private_key):
     register(username, doubleHashedPwd, public_key, private_key)
 
     token = secrets.token_urlsafe(24)
-    tokens[username] = token
+    tokens[token] = username
 
     emit('success', token)
 
@@ -201,7 +220,7 @@ def login_user(username, password):
         return
 
     token = secrets.token_urlsafe(24)
-    tokens[username] = token
+    tokens[token] = username
 
     data = {
         'sessionToken': token,
@@ -214,18 +233,16 @@ def login_user(username, password):
 
 @socketio.on('display_chats')
 def display_chats(sessionToken):
-    for username_token in tokens.items():
-        username = username_token[0]
-        token = username_token[1]
-
-        if token == sessionToken:
-            user = username
-            break
-
-    if user == None or user not in sids:
+    if sessionToken not in tokens:
+        emit('unverified', to=request.sid)
         return
 
-    chats = retrieve_chats(username)
+    user = tokens[sessionToken]
+
+    if user is None:
+        return
+
+    chats = retrieve_chats(user)
 
     for chat in chats:
         socketio.emit('add_chat_btn', chat, to=sids[user])
@@ -233,49 +250,73 @@ def display_chats(sessionToken):
 
 @socketio.on('remove_sid')
 def remove_sid(username):
-    del sids[username]
+    if username in sids:
+        del sids[username]
 
 
-@socketio.on('add_chat')
-def add_chat(idToken, receiver):
-    if idToken not in tokens.values():
-        emit('unverified', to=sender_sid)
+@socketio.on('is_valid_chat_creation_request')
+def is_valid_chat_creation_request(session_token, receiver):
+    if session_token not in tokens:
+        emit('unverified', to=request.sid)
+        return
 
-    # Finds sender's username, based on their session token
-    for username_token in tokens.items():
-        username = username_token[0]
-        token = username_token[1]
+    sender = tokens[session_token]
 
-        if token == idToken:
-            sender = username
-            break
+    if sender is None:
+        emit('unverified', to=request.sid)
+        return
 
     sender_sid = sids.get(sender)
 
+    # User may have input a valid username but with the wrong case,
+    # User_exists returns correct case of requested username, if it exists
+    case_correct_username = user_exists(receiver)
+
+    if case_correct_username == False:
+        e = "This user doesn't seem to exist. "\
+            "Maybe you misspelt their username?"
+        socketio.emit('display_error', e, to=sender_sid)
+        return
+
     try:
-        normalised_reciever_username = user_exists(receiver)
-
-        if normalised_reciever_username == False:
-            raise ValueError(
-                "This user doesn't seem to exist. Maybe you misspelt their username?")
-
-        receiver_sid = sids.get(normalised_reciever_username)
-
-        chat_creation(normalised_reciever_username, sender)
+        is_valid_chat(case_correct_username, sender)
     except ValueError as error:
         if sender_sid is not None:
             socketio.emit('display_error', str(error), to=sender_sid)
         return
 
-    if sender_sid is not None:
-        socketio.emit('add_chat_btn', normalised_reciever_username,
-                      to=sender_sid)
+    data = {
+        'sender': sender,
+        'receiver': case_correct_username,
+        'sender_public_key': retrieve_public_key(sender),
+        'receiver_public_key': retrieve_public_key(case_correct_username)
+    }
 
-    if receiver_sid is not None:
-        # New button for reciever
-        socketio.emit('add_chat_btn', sender, to=receiver_sid)
-        # Added chat msg for reciever
-        socketio.emit('new_chat_msg', sender, to=receiver_sid)
+    print('test')
+    emit('generate_chat', data, to=sender_sid)
+
+
+@socketio.on('create_chat')
+def create_chat(chatData):
+    if chatData['creator_token'] not in tokens:
+        emit('unverified', to=request.sid)
+        return
+
+    user1 = tokens[chatData['creator_token']]
+
+    if user1 != chatData['user1']:
+        return
+
+    create_chat_entry(
+        user1,
+        chatData['user2'],
+        chatData['user1AesKey'],
+        chatData['user2AesKey']
+    )
+
+    print('test')
+
+    emit('add_chat_btn', chatData['user2'], to=sids[user1])
 
 
 if __name__ == "__main__":

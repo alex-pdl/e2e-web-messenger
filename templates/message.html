@@ -10,27 +10,24 @@
             margin-bottom: 10px;
         }
     </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
 <meta http-equiv="refresh" content="15" />  
 <body>
-    <div>
-        <h1>
-            You are chatting with {{ selected_user }}.
-        </h1>
-        <form method="post">
-            <button type="submit" name="return" value="clicked">Return</button>
-        </form>
-    <hr>
-    {% for message in messages %}
-            <p>{{ message }}</p>
-    {% endfor %}
-    <hr>
-    <form method="post">
-        <div>
-            <label for="message">Message: </label>
-            <input type="message" id="message" name="message" maxlength="256" required style="width: 500px;height: 100px;">
-        </div>
-        <input type="submit" value="Send Message">
-    </form>
+    <div id="title">You are chatting with</div>
+    
+    <button type="submit" name="return" value="clicked">Return</button>
+    
+    <div id="message-container"></div>
+    
+    <div id="send-message-container">
+        <label for="messageInput">Message: </label>
+        <input id="messageInput" maxlength="256" required style="width: 500px;height: 100px;">
+        <button id="sendButton">Send</button>
+    </div>
+
+    <script type="module" src="{{ url_for('static', filename='js/modules/crypto/cryptoUtils.js') }}"></script>
+    <script type= "module" src="{{ url_for('static', filename='js/message.js')}}"></script>
 </body>
 </html>

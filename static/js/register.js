@@ -1,7 +1,7 @@
 import {
     genRsaKey, 
     createAESKey, 
-    encryptKeyForStorage,
+    encryptRSAKeyForStorage,
     exportPublicKeyForStorage,
     hashPassword
 } from './modules/crypto/cryptoUtils.js';
@@ -143,7 +143,7 @@ async function createUserDetails(password){
     const aesKey = await createAESKey(password, salt);
     
     const exportedPublicKey = await exportPublicKeyForStorage(publicKey);
-    const encryptedPrivateKey = await encryptKeyForStorage(privateKey, aesKey);
+    const encryptedPrivateKey = await encryptRSAKeyForStorage(privateKey, aesKey);
     const hashedPassword = await hashPassword(password);
 
     data['privateKey'] = privateKey;
@@ -173,8 +173,7 @@ submitBtn.addEventListener('click', async () => {
         userData['exportedPublicKey'],
         userData['encryptedPrivateKey']
     )
-})
-
+});
 
 socket.on('display_error', (error) => {
     errorMsgP.textContent = error;
@@ -192,4 +191,4 @@ socket.on('success', (token) => {
     localStorage.setItem("sessionToken", token);
 
     window.location.replace("/chats");
-})
+});

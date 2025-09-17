@@ -67,7 +67,44 @@ export async function createAESKey(password, salt){
     return derivedAesKey;
 }
 
-export async function encryptKeyForStorage(privateKey, wrappingKey){
+export async function generateRandomAesKey(){
+    const aesKey = await crypto.subtle.generateKey(
+        {'name': 'AES-GCM', 'length': 256},
+        true,
+        ['encrypt', 'decrypt']
+    );
+
+    return aesKey;
+}
+
+export async function wrapExportAESKey(aesKey, wrappingKey){
+    const wrappedAESKey = await crypto.subtle.wrapKey(
+        'jwk',
+        aesKey,
+        wrappingKey,
+        {'name': 'RSA-OAEP'},
+    );
+
+    return btoa(ab2str(wrappedAESKey));
+}
+
+export async function unwrapImportAesKey(aesKey, unwrappingKey){
+    const wrappedAESKey = str2ab(atob(aesKey));
+
+    const importedAESKey = await crypto.subtle.unwrapKey(
+        'jwk',
+        wrappedAESKey,
+        unwrappingKey,
+        {'name': 'RSA-OAEP'},
+        'AES-GCM',
+        true,
+        ['encrypt', 'decrypt']
+    );
+
+    return importedAESKey;
+}
+
+export async function encryptRSAKeyForStorage(privateKey, wrappingKey){
     const iv = crypto.getRandomValues(new Uint8Array(96));
     const wrappedPrivateKey = await crypto.subtle.wrapKey(
         'pkcs8',
@@ -81,7 +118,7 @@ export async function encryptKeyForStorage(privateKey, wrappingKey){
     return btoa(ab2str(concatenateBuffers(wrappedPrivateKey, iv)));
 }
 
-export async function decryptKeyFromStorage(importedKey, unwrapKey){
+export async function decryptRSAKeyFromStorage(importedKey, unwrapKey){
     const importedKeyAsBuffer = str2ab(atob(importedKey));
     const len = importedKeyAsBuffer.byteLength
 
@@ -118,7 +155,9 @@ export async function importPublicKeyFromStorage(publicKey){
     const importedPublicKey = await crypto.subtle.importKey(
         'spki',
         publicKeyAsAB,
-        {'name': 'RSA-OAEP', 'hash': 'SHA-256'}
+        {'name': 'RSA-OAEP', 'hash': 'SHA-256'},
+        false,
+        ['wrapKey']
     );
 
     return importedPublicKey;
