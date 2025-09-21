@@ -168,9 +168,6 @@ def chats():
 
 @app.route('/messages', methods=['GET', 'POST'])
 def message():
-    chatting_with = request.args.get('chatting_with')
-
-    print(chatting_with)
     return render_template('message.html')
 
 
@@ -188,7 +185,7 @@ def verify_session(session_token):
 
     sids[user] = request.sid
 
-    emit('verified', to=sids[user])
+    emit('verified', user, to=sids[user])
 
 
 @socketio.on('register_user')
@@ -292,7 +289,6 @@ def is_valid_chat_creation_request(session_token, receiver):
         'receiver_public_key': retrieve_public_key(case_correct_username)
     }
 
-    print('test')
     emit('generate_chat', data, to=sender_sid)
 
 
@@ -313,8 +309,6 @@ def create_chat(chatData):
         chatData['user1AesKey'],
         chatData['user2AesKey']
     )
-
-    print('test')
 
     emit('add_chat_btn', chatData['user2'], to=sids[user1])
 

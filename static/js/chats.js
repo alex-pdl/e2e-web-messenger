@@ -4,6 +4,13 @@ import {
     wrapExportAESKey
 } from './modules/crypto/cryptoUtils.js';
 
+const sessionToken = localStorage.getItem('sessionToken');
+
+if (sessionToken == null){
+    localStorage.clear();
+    window.location.replace("/login");
+}
+
 const title = document.getElementById('title');
 const logoutBtn = document.getElementById('logoutBtn');
 const chatsContainer = document.getElementById("chats");
@@ -13,10 +20,7 @@ const errorMsgDiv = document.getElementById('errorMsg');
 const chatBtns = document.getElementsByClassName('chat-btn');
 const addUserToChatBtn = document.getElementById('addUserSubmitBtn');
 
-const url = window.location.href;
-
 const username = localStorage.getItem('username');
-const sessionToken = localStorage.getItem('sessionToken');
 const publicKey = await importPublicKeyFromStorage(localStorage.getItem('exportedPublicKey'));
 
 const socket = io();
@@ -29,8 +33,8 @@ socket.on('unverified', (data) => {
     window.location.replace("/login");
 });
 
-socket.on('verified', (data) => {
-    title.textContent = `Welcome ${username}!`;
+socket.on('verified', (usr) => {
+    title.textContent = `Welcome ${usr}!`;
 
     title.style.display = 'block';
     logoutBtn.style.display = 'block';

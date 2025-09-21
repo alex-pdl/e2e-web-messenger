@@ -1,0 +1,209 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Helvetica, sans-serif;
+}
+
+html{
+    height: 100%;
+    width: 100%;
+}
+
+body{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    height: 100%;
+    width: 100%;
+}
+
+
+#title{
+    display: inline-block;
+
+    font-size: 3em;
+    font-weight: 200;
+
+    margin: 10px auto 10px auto;
+
+    transition: all 0.5s ease;
+}
+#title:hover{
+    transform: skewX(-15deg);
+}
+
+#title:hover{
+    transform: skewX(-15deg);
+}
+
+#return-btn{
+    display: block;
+    margin-top: 10px;
+    width: 100px;
+
+    padding: 3px;
+    margin: 10px auto 10px auto;
+
+    font-weight: 100;
+    font-size: 1.1em;
+
+    background-color: white;
+
+    border: 1.5px solid black;
+    border-radius: 5px;
+
+}
+
+#return-btn:hover{
+    background-color: rgb(237, 237, 237);
+}
+
+#return-btn:active{
+    background-color: rgb(193, 193, 193);
+}
+
+
+
+
+#chat-messages{
+    display: flex;
+    flex-direction: column;
+
+    width: 90%;
+    height: 90vb;
+    
+    border-radius: 15px;
+    border: 2px solid black;
+    box-shadow: 0px 0px 50px rgba(0, 0, 0, 0.231);
+
+    position: relative;
+
+    overflow-y: auto;
+
+    padding: 1em;
+}
+
+#chat-messages .message-bubble .you{
+    justify-content: end;
+}
+
+#chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chat-messages::-webkit-scrollbar-track {
+    margin: 8px;
+}
+
+#chat-messages::-webkit-scrollbar-thumb {
+    background-color: #aeaeae;
+    border-radius: 15px;
+}
+
+.message-bubble{
+    display: flex;
+    background-color: aqua;
+    
+    width: 250px;
+    min-width: 150px;
+    
+    border-radius: 15px;
+
+    overflow: hidden;
+}
+
+.msg-contents{
+    font-size: 1.1em;
+    font-weight: 300;
+
+    padding: 3vh;
+}
+
+.message-container.not-you .message-bubble{
+    background-color: rgb(242, 242, 242);
+    border: 0.1em solid rgb(224, 224, 224);
+    border-bottom-left-radius: 6px;
+}
+
+.message-container.not-you .msg-contents{
+    color: black;
+}
+
+.message-container.you{
+    margin-left: auto;
+}
+
+.message-container.you .message-bubble{
+    background-color: black;
+    border-bottom-right-radius: 6px;
+}
+
+.message-container.you .msg-contents{
+    color: white;
+}
+
+.timestamp {
+    font-weight: 200;
+    font-size: 0.95em;
+
+    padding: 5px;
+}
+
+.message-container.you .timestamp{
+    text-align: right;
+}
+
+
+#send-message-container{
+    display: flex;
+    justify-content: left;
+
+    width: 90%;
+    height: 40px;
+
+    margin: 10px auto 10px;
+
+    border: 2px solid black;
+    border-radius: 15px;
+}
+
+#message-input{
+    margin: 0px 0px 0px 10px;
+
+    display: inline-block;
+    width: 95%;
+
+    border: none;
+
+    font-size: 1em;
+    font-weight: 200;
+}
+
+#message-input:focus{
+    outline: none;
+}
+
+#send-msg-button{
+    display: inline-block;
+    width: 50px;
+
+    margin-left: auto;
+
+    background-color: white;
+
+    border-radius: 15px;
+    border: none;
+}
+
+@media only screen and (max-width: 500px) {
+    #chat-messages{padding: 0.5em;}
+    .msg-contents{
+        padding: 2vh;
+        font-size: 1em;
+    }
+    .timestamp{
+        font-size: 0.9em;
+    }
+}
