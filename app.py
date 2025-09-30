@@ -5,13 +5,11 @@ from flask_socketio import SocketIO, emit
 from utils.database_utils import (retrieve_chats, create_chat_entry,
                                   password_check, register, user_exists,
                                   retrieve_privatekey, retrieve_public_key,
-                                  retrieve_chatid, determine_column,
-                                  create_message, retrieve_messages,
-                                  create_database, retrieve_user_id)
+                                  retrieve_chatid, create_message,
+                                  retrieve_messages, create_database,
+                                  retrieve_user_id, get_aes_key)
 
-from crypto_algorithms import (generate_prime, key_gen, hash_password,
-                               sym_encryption, sym_decryption,
-                               rsa_encrypt, rsa_decrypt)
+from crypto_algorithms import (generate_prime)
 
 from utils.input_utils import (get_salt, get_iterations, get_key_size,
                                get_secret_key, ascii_checker,
@@ -86,48 +84,6 @@ def is_register_valid(username):
 def create_session(username):
     session['username'] = username
     session['usr_id'] = retrieve_user_id(username)
-
-
-def store_message(chatid, msg_contents, sender_username, receiver_username):
-    sender_public_key = string_to_tuple(retrieve_public_key(sender_username))
-    receiver_public_key = string_to_tuple(
-        retrieve_public_key(receiver_username))
-
-    # Create two versions of the message, 1 encrypted using the senders info,
-    # and the other using the recievers info
-    sender_message = str(rsa_encrypt(msg_contents, sender_public_key))
-    receiver_message = str(rsa_encrypt(msg_contents, receiver_public_key))
-
-    # Determine which column (contents_1 or contents_2) the sender is a part of
-    which_contents = determine_column(session["username"], chatid)
-
-    if which_contents == "contents_1":
-        create_message(sender_username, chatid,
-                       sender_message, receiver_message)
-    elif which_contents == "contents_2":
-        create_message(sender_username, chatid,
-                       receiver_message, sender_message)
-
-
-def decrypt_format_msgs(msg_info, encrypted_message_contents, private_key):
-    messages = []
-
-    for i in range(len(msg_info)):
-        # Get each individual sender and timestamp
-        info = msg_info[i]
-        # Get each message (encrypted)
-        encrypted_contents = encrypted_message_contents[i][0]
-        # Format the sender and timestamp & append to messages
-        formatted_info = str(info).replace(
-            "(", "").replace(")", "").replace("'", "")
-        messages.append(str(formatted_info))
-        # Format the message contents and decrypt
-        # Then add to messages list
-        formatted_decrypted_message = ": " + \
-            rsa_decrypt(encrypted_contents, private_key)
-        messages[i] += formatted_decrypted_message
-
-    return messages
 
 
 # Beginning of the website code
@@ -311,6 +267,81 @@ def create_chat(chatData):
     )
 
     emit('add_chat_btn', chatData['user2'], to=sids[user1])
+
+
+@socketio.on('verify_chat')
+def verify_chat(chatData, session_token):
+    requester = chatData['requester']
+    chatWith = chatData['chatWith']
+
+    if type(session_token) != str:
+        emit('unverified', to=request.sid)
+        return
+
+    if session_token not in tokens:
+        emit('unverified', to=request.sid)
+        return
+
+    if tokens[session_token] != chatData['requester']:
+        return
+
+    if not is_valid_username(chatData['chatWith']):
+        return
+
+    chatid = retrieve_chatid(requester, chatWith)
+
+    if chatid is None:
+        return
+
+    aes_key = get_aes_key(chatid, requester)
+
+    msg_info, msg_contents = retrieve_messages(chatid)
+
+    data = {
+        'chatId': chatid,
+        'aesKey': aes_key,
+        'messages': (msg_info, msg_contents)
+    }
+
+    if requester in sids:
+        emit('initialise_chat', data, to=sids.get(requester))
+
+
+@socketio.on('send_message')
+def send_message(session_token, message):
+    if session_token not in tokens:
+        return
+
+    if not isinstance(message, dict):
+        return
+
+    msg_chatid = message.get('chatid')
+    sender = message.get('sender')
+    receiver = message.get('receiver')
+    contents = message.get('contents')
+    timestamp = message.get('date')
+
+    chatid = retrieve_chatid(sender, receiver)
+
+    if chatid is None or chatid != msg_chatid:
+        return
+
+    if sender != tokens.get(session_token):
+        return
+
+    create_message(chatid, timestamp, sender, contents)
+
+    if receiver in sids:
+
+        msgData = {
+            'sender': sender,
+            'date': timestamp,
+            'contents': contents
+        }
+
+        print(msgData)
+
+        emit('receive_msg', msgData, to=sids.get(receiver))
 
 
 if __name__ == "__main__":

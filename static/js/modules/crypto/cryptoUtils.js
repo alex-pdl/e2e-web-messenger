@@ -36,7 +36,7 @@ export async function genRsaKey() {
             'hash': 'SHA-256'
         },
         true,
-        ['encrypt', 'decrypt']
+        ['wrapKey', 'unwrapKey']
     );
 
     return keyPair
@@ -131,8 +131,8 @@ export async function decryptRSAKeyFromStorage(importedKey, unwrapKey){
         unwrapKey,
         {'name': 'AES-GCM', 'iv': iv},
         {'name': 'RSA-OAEP', 'hash': 'SHA-256'},
-        [true],
-        ['decrypt']
+        true,
+        ['unwrapKey']
     );
     
     return decryptedKey;
@@ -163,25 +163,33 @@ export async function importPublicKeyFromStorage(publicKey){
     return importedPublicKey;
 }
 
-export async function encryptMessage(message, publicKey){
+export async function encryptMessage(message, aesKey){
     const messageToBuffer = str2ab(message);
+    const iv = crypto.getRandomValues(new Uint8Array(96));
 
     const encryptedMessage = await crypto.subtle.encrypt(
-        {'name': 'RSA-OAEP'},
-        publicKey,
+        {'name': 'AES-GCM', 'iv':iv},
+        aesKey,
         messageToBuffer
     );
 
-    return btoa(ab2str(encryptedMessage));
+    const msgAndIV = concatenateBuffers(encryptedMessage, iv)
+
+    return btoa(ab2str(msgAndIV));
 }
 
-export async function decryptMessage(message, privateKey){
-    const messageToBuffer = str2ab(atob(message));
+export async function decryptMessage(cipherText, aesKey){
+    const cipherTextToBuffer = str2ab(atob(cipherText));
+    const len = cipherTextToBuffer.byteLength;
+
+    const encryptedMessage = cipherTextToBuffer.slice(0, len - 96);
+    const iv = cipherTextToBuffer.slice(len-96);
+
 
     const decryptedMessage = await crypto.subtle.decrypt(
-        {'name': 'RSA-OAEP'},
-        privateKey,
-        messageToBuffer
+        {'name': 'AES-GCM', 'iv':iv},
+        aesKey,
+        encryptedMessage
     );
 
     return ab2str(decryptedMessage);

@@ -56,8 +56,6 @@ def retrieve_privatekey(username):
     connection.close()
     return encrypted_private_key
 
-# Checks if the username is not in use
-
 
 def user_exists(username):
     connection = sqlite3.connect(database)
@@ -113,35 +111,29 @@ def retrieve_chatid(username_1, username_2):
     return chat_id
 
 
-def create_message(sender, chat_id, contents_1, contents_2):
+def create_message(chat_id, timestamp, sender, contents):
     connection = sqlite3.connect(database)
     cursor = connection.cursor()
 
-    x = datetime.datetime.now()  # get timestamp of message
-
-    # Format to exclude microseconds
-    formatted_time = x.strftime("%Y-%m-%d %H:%M:%S")
-
-    cursor.execute("INSERT INTO message (sender, chat_id, contents_1, contents_2, timestamp) VALUES (?, ?, ?, ?, ?)",
-                   (sender, chat_id, contents_1, contents_2, formatted_time))
+    cursor.execute("INSERT INTO message (sender, chat_id, contents, timestamp) VALUES (?, ?, ?, ?)",
+                   (sender, chat_id, contents, timestamp))
 
     connection.commit()
     connection.close()
 
 
-def retrieve_messages(chat_id, which_contents):
+def retrieve_messages(chat_id):
     connection = sqlite3.connect(database)
     cursor = connection.cursor()
-    try:
-        cursor.execute(
-            "SELECT timestamp,sender FROM message WHERE chat_id = ? ORDER BY timestamp", (chat_id,))
-        message_info = cursor.fetchall()
-        cursor.execute(
-            f"SELECT {which_contents} FROM message WHERE chat_id = ? ORDER BY timestamp", (chat_id,))
-        contents = cursor.fetchall()
-        return message_info, contents
-    except:
-        pass
+
+    cursor.execute(
+        "SELECT timestamp, sender FROM message WHERE chat_id = ? ORDER BY timestamp", (chat_id,))
+    message_info = cursor.fetchall()
+    cursor.execute(
+        f"SELECT contents FROM message WHERE chat_id = ? ORDER BY timestamp", (chat_id,))
+    contents = cursor.fetchall()
+
+    return message_info, contents
 
 
 def retrieve_public_key(username):
@@ -154,19 +146,24 @@ def retrieve_public_key(username):
     return public_key
 
 
-def determine_column(username, chatid):
-    # Determine which column (contents_1 or contents_2) the sender is a part of
+def get_aes_key(chatid, username):
     connection = sqlite3.connect(database)
     cursor = connection.cursor()
-    # If the user's username is stored in username_1, their message contents is stored in conents_1 and vica versa
+
     cursor.execute(
-        "SELECT username_1 FROM chats WHERE chatid = (?)", (chatid,))
-    username_1 = str(cursor.fetchone()).strip(filler)
+        f"SELECT aes_key_1 FROM chats WHERE chatid = '{chatid}' AND username_1 = '{username}'")
+
+    aes_key = str(cursor.fetchone()).strip(filler)
+
+    if aes_key == 'None':
+        cursor.execute(
+            f"SELECT aes_key_2 FROM chats WHERE chatid = '{chatid}' AND username_2 = '{username}'")
+
+        aes_key = str(cursor.fetchone()).strip(filler)
+
     connection.close()
-    if username == username_1:
-        return "contents_1"
-    else:
-        return "contents_2"
+
+    return aes_key
 
 
 def create_database():
@@ -196,8 +193,7 @@ def create_database():
         msg_id INTEGER PRIMARY KEY NOT NULL,
         sender TEXT,
         chat_id INTEGER,
-        contents_1 TEXT,
-        contents_2 TEXT,
+        contents TEXT,
         timestamp DATETIME
     ) """
     cursor.execute(create_message_table)
