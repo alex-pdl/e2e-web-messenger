@@ -1,0 +1,209 @@
+function concatenateBuffers(buffer1, buffer2){
+    const newBuffer = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+
+    newBuffer.set(new Uint8Array(buffer1), 0);
+    newBuffer.set(new Uint8Array(buffer2), buffer1.byteLength);
+    
+    return newBuffer;
+}
+
+function stringToBuffer(str){
+    const encoder = new TextEncoder();
+    const buffer = encoder.encode(str);
+
+    return new Uint8Array(buffer);
+}
+
+function ab2str(buf) {
+    return String.fromCharCode.apply(null, new Uint8Array(buf));
+}
+
+function str2ab(str) {
+    const buf = new ArrayBuffer(str.length);
+    const bufView = new Uint8Array(buf);
+    for (let i = 0, strLen = str.length; i < strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
+}
+
+export async function genRsaKey() {
+    const keyPair = await crypto.subtle.generateKey(
+        {
+            'name': "RSA-OAEP",
+            'modulusLength': 2048,
+            'publicExponent': new Uint8Array([1, 0, 1]),
+            'hash': 'SHA-256'
+        },
+        true,
+        ['wrapKey', 'unwrapKey']
+    );
+
+    return keyPair
+}
+
+export async function createAESKey(password, salt){
+    const importedKey = await crypto.subtle.importKey(
+        'raw',
+        stringToBuffer(password),
+        {'name': 'PBKDF2'},
+        false,
+        ['deriveKey']
+    )
+
+    const derivedAesKey = await crypto.subtle.deriveKey(
+        {
+            'name': 'PBKDF2',
+            'hash': 'SHA-256',
+            'salt': stringToBuffer(salt),
+            'iterations': 10000
+        },
+        importedKey,
+        {'name': 'AES-GCM', 'length': 256},
+        true,
+        ['wrapKey', 'unwrapKey']
+    )
+
+    return derivedAesKey;
+}
+
+export async function generateRandomAesKey(){
+    const aesKey = await crypto.subtle.generateKey(
+        {'name': 'AES-GCM', 'length': 256},
+        true,
+        ['encrypt', 'decrypt']
+    );
+
+    return aesKey;
+}
+
+export async function wrapExportAESKey(aesKey, wrappingKey){
+    const wrappedAESKey = await crypto.subtle.wrapKey(
+        'jwk',
+        aesKey,
+        wrappingKey,
+        {'name': 'RSA-OAEP'},
+    );
+
+    return btoa(ab2str(wrappedAESKey));
+}
+
+export async function unwrapImportAesKey(aesKey, unwrappingKey){
+    const wrappedAESKey = str2ab(atob(aesKey));
+
+    const importedAESKey = await crypto.subtle.unwrapKey(
+        'jwk',
+        wrappedAESKey,
+        unwrappingKey,
+        {'name': 'RSA-OAEP'},
+        'AES-GCM',
+        true,
+        ['encrypt', 'decrypt']
+    );
+
+    return importedAESKey;
+}
+
+export async function encryptRSAKeyForStorage(privateKey, wrappingKey){
+    const iv = crypto.getRandomValues(new Uint8Array(96));
+    const wrappedPrivateKey = await crypto.subtle.wrapKey(
+        'pkcs8',
+        privateKey, 
+        wrappingKey, 
+        {'name': 'AES-GCM', 'iv': iv}
+    );
+
+    // Wrapped key is prepended with its intialisation vector
+
+    return btoa(ab2str(concatenateBuffers(wrappedPrivateKey, iv)));
+}
+
+export async function decryptRSAKeyFromStorage(importedKey, unwrapKey){
+    const importedKeyAsBuffer = str2ab(atob(importedKey));
+    const len = importedKeyAsBuffer.byteLength
+
+    const wrappedKey = importedKeyAsBuffer.slice(0, len - 96);
+    const iv = importedKeyAsBuffer.slice(len-96);
+    
+    const decryptedKey = await crypto.subtle.unwrapKey(
+        'pkcs8',
+        wrappedKey,
+        unwrapKey,
+        {'name': 'AES-GCM', 'iv': iv},
+        {'name': 'RSA-OAEP', 'hash': 'SHA-256'},
+        true,
+        ['unwrapKey']
+    );
+    
+    return decryptedKey;
+}
+
+export async function exportPublicKeyForStorage(publicKey){
+    const exportedPublicKey = await crypto.subtle.exportKey(
+        'spki',
+        publicKey
+    );
+
+    const publicKeyAsBase64String = btoa(ab2str(exportedPublicKey));
+
+    return publicKeyAsBase64String;
+}
+
+export async function importPublicKeyFromStorage(publicKey){
+    const publicKeyAsAB = str2ab(atob(publicKey));
+
+    const importedPublicKey = await crypto.subtle.importKey(
+        'spki',
+        publicKeyAsAB,
+        {'name': 'RSA-OAEP', 'hash': 'SHA-256'},
+        false,
+        ['wrapKey']
+    );
+
+    return importedPublicKey;
+}
+
+export async function encryptMessage(message, aesKey){
+    const messageToBuffer = str2ab(message);
+    const iv = crypto.getRandomValues(new Uint8Array(96));
+
+    const encryptedMessage = await crypto.subtle.encrypt(
+        {'name': 'AES-GCM', 'iv':iv},
+        aesKey,
+        messageToBuffer
+    );
+
+    const msgAndIV = concatenateBuffers(encryptedMessage, iv)
+
+    return btoa(ab2str(msgAndIV));
+}
+
+export async function decryptMessage(cipherText, aesKey){
+    const cipherTextToBuffer = str2ab(atob(cipherText));
+    const len = cipherTextToBuffer.byteLength;
+
+    const encryptedMessage = cipherTextToBuffer.slice(0, len - 96);
+    const iv = cipherTextToBuffer.slice(len-96);
+
+
+    const decryptedMessage = await crypto.subtle.decrypt(
+        {'name': 'AES-GCM', 'iv':iv},
+        aesKey,
+        encryptedMessage
+    );
+
+    return ab2str(decryptedMessage);
+}
+
+export async function hashPassword(password) {
+    const encoder = new TextEncoder();
+  
+    const encodedPassword = encoder.encode(password);
+  
+    const hashedPassword = await window.crypto.subtle.digest(
+        "SHA-256", 
+        encodedPassword
+    );
+  
+  return btoa(ab2str(hashedPassword));
+}

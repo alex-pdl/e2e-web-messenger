@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css')}}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=arrow_back_ios_new" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <title>Senderr</title>
 </head>
 <body>
     <div id="container">
-    <form method="POST" action='{{url_for('registration')}}'>
         <div id="title">Register</div>
         <div class="inputBox" id="usernameBox">
             <label for="username">Username </label>
@@ -22,16 +22,14 @@
             <input type="password" id="password" name="password" minlength="8" maxlength="256" required>
         </div>
 
-        <input id="submitBtn" type="submit" value="Register">
+        <button id="submitBtn">Register</button>
 
         <div id="errorMsg">
-            {% if error%}
-            <p>{{error}}</p>
-            {% endif%}
+            <p></p>
         </div>
-    </form>
     <button id="returnBtn"><a href="/login"><span class="material-symbols-outlined">arrow_back_ios_new</span></a></button>
     </div>
-    <script src="{{ url_for('static', filename='js/register.js')}}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/modules/crypto/cryptoUtils.js') }}"></script>
+    <script type= "module" src="{{ url_for('static', filename='js/register.js')}}"></script>
 </body>
 </html>

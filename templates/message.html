@@ -4,33 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Messaging</title>
-    <style>
-        /* Add margin between elements */
-        hr {
-            margin-bottom: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/message.css')}}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 </head>
-<meta http-equiv="refresh" content="15" />  
 <body>
-    <div>
-        <h1>
-            You are chatting with {{ selected_user }}.
-        </h1>
-        <form method="post">
-            <button type="submit" name="return" value="clicked">Return</button>
-        </form>
-    <hr>
-    {% for message in messages %}
-            <p>{{ message }}</p>
-    {% endfor %}
-    <hr>
-    <form method="post">
-        <div>
-            <label for="message">Message: </label>
-            <input type="message" id="message" name="message" maxlength="256" required style="width: 500px;height: 100px;">
+    <div id="title">Name</div>
+    
+    <button id="return-btn">Return</button>
+    
+    <div id="chat-messages">
+        <div class="message-container not-you">
+            <div class="message-bubble"><p class="msg-contents">Hi there!</p></div>
+            <div class="timestamp">3 Days ago at 19:25</div>
         </div>
-        <input type="submit" value="Send Message">
-    </form>
+        
+        <div class="message-container you">
+            <div class="message-bubble"><p class="msg-contents">How are you?</p></div>
+            <div class="timestamp">2 Days ago at 13:25</div>
+        </div>
+        
+        <div class="message-container not-you">
+            <div class="message-bubble"><p class="msg-contents">Doing good what about you?</p></div>
+            <div class="timestamp">Yesterday at 15:25</div>
+        </div>
+        
+        <div class="message-container you">
+            <div class="message-bubble"><p class="msg-contents">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Ullam nihil facilis, amet iusto sed eum atque praesentium est non perspiciatis? Laboriosam sequi ut cupiditate temporibus veritatis iste? Voluptatum, porro enim.</p></div>
+            <div class="timestamp">Today at 21:25</div>
+        </div>
+    </div>
+    
+    <div id="send-message-container">
+        <input id="message-input" maxlength="256" required>
+        <button id="send-msg-button">Send</button>
+    </div>
+
+    <script type="module" src="{{ url_for('static', filename='js/modules/crypto/cryptoUtils.js') }}"></script>
+    <script type= "module" src="{{ url_for('static', filename='js/message.js')}}"></script>
 </body>
 </html>
