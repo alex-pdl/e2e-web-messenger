@@ -266,7 +266,13 @@ def create_chat(chatData):
         chatData['user2AesKey']
     )
 
-    emit('add_chat_btn', chatData['user2'], to=sids[user1])
+    emit('add_chat_btn', chatData['user2'], to=sids.get(user1))
+
+    user2 = user_exists(chatData.get('user2'))
+
+    if user2 in sids:
+        emit('add_chat_btn', chatData['user1'], to=sids.get(user2))
+        emit('new_chat_msg', chatData['user1'], to=sids.get(user2))
 
 
 @socketio.on('verify_chat')
