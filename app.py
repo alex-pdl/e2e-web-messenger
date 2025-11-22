@@ -9,11 +9,7 @@ from utils.database_utils import (retrieve_chats, create_chat_entry,
                                   retrieve_messages, create_database,
                                   retrieve_user_id, get_aes_key)
 
-from crypto_algorithms import (generate_prime)
-
-from utils.input_utils import (get_salt, get_iterations, get_key_size,
-                               get_secret_key, ascii_checker,
-                               string_to_tuple, is_valid_username)
+from utils.input_utils import (get_salt, get_secret_key, is_valid_username)
 
 from utils.crypto_utils import hash_pass
 
@@ -25,24 +21,15 @@ import secrets
 
 def write_settings():
     salt = get_salt()
-    iterations = get_iterations()
-    prime_number = generate_prime(5)
-    key_size = get_key_size()
     secret_key = get_secret_key()
 
     print(
         f"Here is your configuration:\n"
         f"Salt: {salt}\n"
-        f"Iterations: {iterations}\n"
-        f"Prime Number: {prime_number}\n"
-        f"Key Size: {key_size}\n"
         f"Secret Key: {secret_key}"
     )
 
     settings = {"salt": salt,
-                "iterations": iterations,
-                "primenumber": prime_number,
-                "key_size": key_size,
                 "secret_key": secret_key}
 
     # Writing user defined settings to JSON file
@@ -359,9 +346,6 @@ if __name__ == "__main__":
             print("\nSuccessfully detected settings.\n")
 
             salt = data["salt"]
-            iterations = data["iterations"]
-            prime_number = data["primenumber"]
-            keysize = data["key_size"]
             secret_key = data["secret_key"]
             break
         except (FileNotFoundError, NameError):  # If the settings.json file doesn't exist
