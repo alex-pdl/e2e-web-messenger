@@ -16,7 +16,7 @@ pip install Flask sqlite3
 </pre>
 <p>Download & run</p>
 <pre>
-git clone &lt;repo&gt;
-cd &lt;repo&gt;
+git clone https://github.com/alex-pdl/e2e-web-messenger.git
+cd e2e-web-messenger/
 python3 app.py
 </pre>
