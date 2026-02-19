@@ -10,13 +10,16 @@ A self-hostable, end-to-end encrypted real-time messaging web application built 
 <br>
 </p>
 <h2>Running Locally</h2>
-<p>Install dependencies</p>
-<pre>
-pip install Flask sqlite3
-</pre>
-<p>Download & run</p>
+<p>1. Download</p>
 <pre>
 git clone https://github.com/alex-pdl/e2e-web-messenger.git
+</pre>
+<p>2. Install Dependencies</p>
+<pre>
 cd e2e-web-messenger/
+pip install -r requirements.txt
+</pre>
+<p>3. Run</p>
+<pre>
 python3 app.py
 </pre>
