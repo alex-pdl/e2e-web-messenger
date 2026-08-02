@@ -1,25 +1,37 @@
 
-<h1>e2e-web-messenger</h1>
-<div>
-A self-hostable, end-to-end encrypted real-time messaging web application built with Python. Utilising WebSocket-based communication and a responsive web interface. Based off of my previous project, <a href="https://github.com/alex-pdl/senderr">Senderr</a>.
-</div>
-<br>
-<p align="center">
-  <img src="readme-imgs/mobile-sample-pages.png" width="600" />
-</p>
-<br>
-</p>
-<h2>Running Locally</h2>
-<p>1. Download</p>
-<pre>
+# e2e-web-messenger
+A self-hostable, end-to-end encrypted real-time messaging web application built with Python. Utilising WebSocket-based communication and a responsive web interface. Based off of my previous project, [Senderr](https://github.com/alex-pdl/senderr).
+
+
+![preview](/readme-imgs/chat_preview.gif)
+
+## Tech Stack
+
+- Backend: Python, Flask, [Socket.IO](https://socket.io/) (for WebSockets) 
+- Frontend: HTML, CSS, JavaScript, [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) (for encryption)
+- Database: SQLite
+
+## How to get started
+1. Download
+```
 git clone https://github.com/alex-pdl/e2e-web-messenger.git
-</pre>
-<p>2. Install Dependencies</p>
-<pre>
+```
+2. Install Dependencies
+```
 cd e2e-web-messenger/
 pip install -r requirements.txt
-</pre>
-<p>3. Run</p>
-<pre>
+```
+3. Run
+```
 python3 app.py
-</pre>
+```
+
+## Brief Overview (how it works)
+Each chat has a unique AES key used to encrypt message content. When a chat is created, the sender generates this key in the browser and wraps (encrypts) it separately with the public key of each participant. It can only be unwrapped by the private key of each participant (which leaves the client). The server stores only these wrapped copies, so it can never decrypt a message. On every visit to a chat, both clients fetch their wrapped copy from the server and unwrap it locally to encrypt/decrypt messages in the browser.
+![encryption system diagram](/readme-imgs/encryption-diagram.png)
+
+## Important Considerations
+<small>Please do not use this software for any highly sensitive communication. It has not been audited by security professionals.</small>
+
+
+
