@@ -7,8 +7,7 @@ RUN pip install -r requirements.txt
 EXPOSE 5000
 
 # Creating a non-root user for the container to run on 
-RUN useradd -m usr 
-RUN chown usr /app/users.db
+RUN useradd -m usr && chown usr -R /app
 USER usr
 
 CMD ["python", "app.py"]
