@@ -29,9 +29,17 @@ python3 app.py
 ## Brief Overview (how it works)
 Each chat has a unique AES key used to encrypt message content. When a chat is created, the sender generates this key in the browser and wraps (encrypts) it separately with the public key of each participant. It can only be unwrapped by the private key of each participant (which leaves the client). The server stores only these wrapped copies, so it can never decrypt a message. On every visit to a chat, both clients fetch their wrapped copy from the server and unwrap it locally to encrypt/decrypt messages in the browser.
 ![encryption system diagram](/readme-imgs/encryption-diagram.png)
-
-## Important Considerations
 <small>Please do not use this software for any highly sensitive communication. It has not been audited by security professionals.</small>
 
+## Important Considerations
 
+Here are some of the project's limitations:
 
+- Metadata is visible to the server such as: which users are talking to each other and the times of their messages.
+  - only the message contents are fully encrypted.
+
+- It is not currently possible to 100% verify the identity of the user you are chatting with.
+
+- No method of key rotation; each chat uses one AES key for its lifetime rather than changing keys per-message or per-session.
+
+These are features I am considering adding in the future!
