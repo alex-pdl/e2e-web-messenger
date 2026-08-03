@@ -38,7 +38,7 @@ Here are some of the project's limitations:
 - Metadata is visible to the server such as: which users are talking to each other and the times of their messages.
   - only the message contents are fully encrypted.
 
-- It is not currently possible to 100% verify the identity of the user you are chatting with.
+- There is no feature to verify the public key of the person you're chatting with, like signal's [safety numbers](https://support.signal.org/hc/en-us/articles/360007060632-What-is-a-safety-number-and-why-do-I-see-that-it-changed).
 
 - No method of key rotation; each chat uses one AES key for its lifetime rather than changing keys per-message or per-session.
 
