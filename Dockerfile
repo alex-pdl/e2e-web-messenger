@@ -10,4 +10,4 @@ EXPOSE 5000
 RUN useradd -m usr && chown usr -R /app
 USER usr
 
-CMD ["python", "app.py"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "-w", "4", "app:app"]
