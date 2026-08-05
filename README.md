@@ -5,25 +5,28 @@ A self-hostable, end-to-end encrypted real-time messaging web application built 
 
 ![preview](/readme-imgs/chat_preview.gif)
 
+You can check out my instance [here](https://e2e-web-messenger.site)! <small>Note: An account is required to add and message people.</small>
 ## Tech Stack
 
 - Backend: Python, Flask, [Socket.IO](https://socket.io/) (for WebSockets) 
 - Frontend: HTML, CSS, JavaScript, [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API) (for encryption)
 - Database: SQLite
 
-## How to get started
-1. Download
+## How to get started (macos/linux)
+### Download
 ```
 git clone https://github.com/alex-pdl/e2e-web-messenger.git
-```
-2. Install Dependencies
-```
 cd e2e-web-messenger/
+```
+### Running Directly 
+```
 pip install -r requirements.txt
-```
-3. Run
-```
 python3 app.py
+```
+### Running in docker container
+```
+docker build -t e2e-web-messenger .
+docker run -d --name=e2e-web-messenger --restart=always -p 5000:5000 e2e-web-messenger
 ```
 
 ## Brief Overview (how it works)
