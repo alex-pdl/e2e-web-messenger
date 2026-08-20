@@ -5,7 +5,8 @@ A self-hostable, end-to-end encrypted real-time messaging web application built 
 
 ![preview](/readme-imgs/chat_preview.gif)
 
-You can check out my instance [here](https://e2e-web-messenger.site)! <small>Note: An account is required to add and message people.</small>
+You can check out my instance [here](https://e2e-web-messenger.site)! <small>
+Note: Create an account to add and message people.</small>
 ## Tech Stack
 
 - Backend: Python, Flask, [Socket.IO](https://socket.io/) (for WebSockets) 
